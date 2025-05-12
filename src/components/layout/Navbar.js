@@ -1,198 +1,360 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { HoveredLink, Menu, MenuItem, ProductItem } from '../ui/navbar-menu';
+import { motion, AnimatePresence } from 'framer-motion';
+import { HoveredLink } from '../ui/navbar-menu';
 import { cn } from '../../lib/utils';
 
 const Navbar = () => {
   const [active, setActive] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <header className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-slate-700/50">
-      <div className="flex justify-center items-center py-4">
+    <header className={`${isScrolled 
+      ? 'bg-black/95 backdrop-blur-md shadow-lg'
+      : 'bg-black'} 
+      w-full z-50 transition-all duration-300  `}>
+      <div className="container mx-auto px-6 py-8">
+        <div className="flex justify-between items-center">
+          {/* Logo */}
+          <Link to="/" className="flex items-center">
+            <img src="/icon.png" alt="Department Logo" className="h-22 w-20 mr-2 drop-shadow-lg" />
+          </Link>
+
         {/* Desktop Navigation */}
-        <div className="hidden md:block">
-          <div className="relative z-50">
-            <Menu setActive={setActive}>
-              <Link to="/" className="px-4 py-2 text-white hover:text-white/90 flex items-center gap-2 transition-all duration-200">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
+          <div className="hidden md:flex items-center gap-8">
+            <nav>
+              <ul className="flex gap-8 items-center">
+                <li>
+                  <Link to="/" className="text-white hover:text-white/90 uppercase font-semibold text-base tracking-wider transition-all duration-200">
                 Home
               </Link>
-              
-              <Link to="/about" className="px-4 py-2 text-white hover:text-white/90 flex items-center gap-2 transition-all duration-200">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                </li>
+                <li>
+                  <Link to="/about" className="text-white hover:text-white/90 uppercase font-semibold text-base tracking-wider transition-all duration-200">
                 About
               </Link>
-              
-              <MenuItem setActive={setActive} active={active} item="Academics">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <h3 className="font-medium text-white mb-2">Certifications</h3>
-                    <div className="flex flex-col space-y-2">
-                      <HoveredLink href="/academics/certifications/nptel">NPTEL</HoveredLink>
-                      <HoveredLink href="/academics/certifications/udemy">UDEMY</HoveredLink>
-                      <HoveredLink href="/academics/certifications/springboot">SPRINGBOOT</HoveredLink>
-                    </div>
+                </li>
+                <li>
+                  <div 
+                    className="flex items-center text-white hover:text-white/90 uppercase font-semibold text-base tracking-wider cursor-pointer transition-all duration-200 pt-10 pb-10"
+                    onMouseEnter={() => setActive('academics')}
+                    onMouseLeave={() => setActive(null)}
+                  >
+                    Academics
+                    <svg className="ml-2 w-4 h-4 text-white/70 group-hover:text-white transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                   </div>
-                  <div>
-                    <h3 className="font-medium text-white mb-2">More</h3>
-                    <div className="flex flex-col space-y-2">
-                      <HoveredLink href="/academics/achievements">Achievements</HoveredLink>
-                      <HoveredLink href="/academics/research">Research Papers</HoveredLink>
-                      <HoveredLink href="/academics/placements">Placements</HoveredLink>
-                    </div>
+                </li>
+                <li>
+                  <div 
+                    className="flex items-center text-white hover:text-white/90 uppercase font-semibold text-base tracking-wider cursor-pointer transition-all duration-200"
+                    onMouseEnter={() => setActive('events')}
+                    onMouseLeave={() => setActive(null)}
+                  >
+                    Events
+                    <svg className="ml-2 w-4 h-4 text-white/70 group-hover:text-white transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                   </div>
-                </div>
-              </MenuItem>
-              
-              <MenuItem setActive={setActive} active={active} item="Events">
-                <div className="flex flex-col space-y-2 text-sm">
-                  <HoveredLink href="/events/seminars">SDP / Technical Seminar</HoveredLink>
-                  <HoveredLink href="/events/hackathon">Hackathon</HoveredLink>
-                  <HoveredLink href="/events/industrial">Industrial Events</HoveredLink>
-                  <HoveredLink href="/events/sports">Sports</HoveredLink>
-                  <HoveredLink href="/events/cultural">Cultural Events</HoveredLink>
-                </div>
-              </MenuItem>
-              
-              <Link to="/students" className="px-4 py-2 text-white hover:text-white/90 flex items-center gap-2 transition-all duration-200">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                Students
-              </Link>
-            </Menu>
+                </li>
+                <li>
+                  <Link to="/students" className="text-white hover:text-white/90 uppercase font-semibold text-base tracking-wider transition-all duration-200">
+                    Students
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+            <Link 
+              to="/contact"
+              className="btn btn--orange hover--white px-8 py-3 bg-orange-500 hover:bg-white text-white hover:text-orange-500 uppercase text-base font-bold tracking-wider rounded transition-all duration-300"
+            >
+              Contact
+            </Link>
           </div>
-        </div>
 
-        {/* Mobile menu button */}
-        <div className="md:hidden">
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="text-white hover:text-white/90 focus:outline-none transition-all duration-200"
-          >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {isMobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
+          {/* Mobile menu button */}
+          <div className="md:hidden  pb-10">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="text-white focus:outline-none"
+              aria-label="Toggle menu"
+            >
+              <div className="w-8 h-7 flex flex-col justify-between">
+                <span className={`block w-full h-0.5 bg-white transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-3' : ''}`}></span>
+                <span className={`block w-full h-0.5 bg-white transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : 'opacity-100'}`}></span>
+                <span className={`block w-full h-0.5 bg-white transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-3' : ''}`}></span>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Full-width mega dropdown menus */}
+      <AnimatePresence>
+        {active === 'academics' && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="w-full bg-black/95 border-t border-white/10 overflow-hidden"
+            onMouseEnter={() => setActive('academics')}
+            onMouseLeave={() => setActive(null)}
+          >
+            <div className="container mx-auto py-12">
+              <div className="flex">
+                <div className="w-1/3 pr-12">
+                  <div className="rounded-lg overflow-hidden h-64 mb-4">
+                    <img 
+                      src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80" 
+                      alt="Academics" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Academics</h3>
+                  <p className="text-white/70">Discover our academic programs, achievements, and resources designed to help students excel in computer science.</p>
+                </div>
+                <div className="w-2/3 grid grid-cols-3 gap-12">
+                  <div>
+                    <h4 className="text-lg font-bold text-white mb-4">Certifications</h4>
+                    <ul className="space-y-3">
+                      <li>
+                        <Link to="/academics/certifications/nptel" className="text-white/80 hover:text-white text-base transition-all">NPTEL</Link>
+                      </li>
+                      <li>
+                        <Link to="/academics/certifications/udemy" className="text-white/80 hover:text-white text-base transition-all">UDEMY</Link>
+                      </li>
+                      <li>
+                        <Link to="/academics/certifications/springboot" className="text-white/80 hover:text-white text-base transition-all">SPRINGBOOT</Link>
+                      </li>
+                    </ul>
+                    </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-white mb-4">Resources</h4>
+                    <ul className="space-y-3">
+                      <li>
+                        <Link to="/academics/achievements" className="text-white/80 hover:text-white text-base transition-all">Achievements</Link>
+                      </li>
+                      <li>
+                        <Link to="/academics/research" className="text-white/80 hover:text-white text-base transition-all">Research Papers</Link>
+                      </li>
+                      <li>
+                        <Link to="/academics/placements" className="text-white/80 hover:text-white text-base transition-all">Placements</Link>
+                      </li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-white mb-4">Programs</h4>
+                    <ul className="space-y-3">
+                      <li>
+                        <Link to="/academics/undergraduate" className="text-white/80 hover:text-white text-base transition-all">Undergraduate</Link>
+                      </li>
+                      <li>
+                        <Link to="/academics/postgraduate" className="text-white/80 hover:text-white text-base transition-all">Postgraduate</Link>
+                      </li>
+                      <li>
+                        <Link to="/academics/phd" className="text-white/80 hover:text-white text-base transition-all">PhD</Link>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {active === 'events' && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="w-full bg-black/95 border-t border-white/10 overflow-hidden"
+            onMouseEnter={() => setActive('events')}
+            onMouseLeave={() => setActive(null)}
+          >
+            <div className="container mx-auto py-12">
+              <div className="flex">
+                <div className="w-1/3 pr-12">
+                  <div className="rounded-lg overflow-hidden h-64 mb-4">
+                    <img 
+                      src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1700&q=80" 
+                      alt="Events" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Events</h3>
+                  <p className="text-white/70">Explore our technical and non-technical events designed to enhance student learning and professional development.</p>
+                </div>
+                <div className="w-2/3 grid grid-cols-3 gap-12">
+                  <div>
+                    <h4 className="text-lg font-bold text-white mb-4">Technical Events</h4>
+                    <ul className="space-y-3">
+                      <li>
+                        <Link to="/events/seminars" className="text-white/80 hover:text-white text-base transition-all">SDP / Technical Seminar</Link>
+                      </li>
+                      <li>
+                        <Link to="/events/hackathon" className="text-white/80 hover:text-white text-base transition-all">Hackathon</Link>
+                      </li>
+                      <li>
+                        <Link to="/events/workshops" className="text-white/80 hover:text-white text-base transition-all">Workshops</Link>
+                      </li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-white mb-4">Non-Technical Events</h4>
+                    <ul className="space-y-3">
+                      <li>
+                        <Link to="/events/cultural" className="text-white/80 hover:text-white text-base transition-all">Cultural Events</Link>
+                      </li>
+                      <li>
+                        <Link to="/events/sports" className="text-white/80 hover:text-white text-base transition-all">Sports</Link>
+                      </li>
+                      <li>
+                        <Link to="/events/clubs" className="text-white/80 hover:text-white text-base transition-all">Club Activities</Link>
+                      </li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-white mb-4">Industry Connect</h4>
+                    <ul className="space-y-3">
+                      <li>
+                        <Link to="/events/industrial" className="text-white/80 hover:text-white text-base transition-all">Industrial Visits</Link>
+                      </li>
+                      <li>
+                        <Link to="/events/guest-lectures" className="text-white/80 hover:text-white text-base transition-all">Guest Lectures</Link>
+                      </li>
+                      <li>
+                        <Link to="/events/internships" className="text-white/80 hover:text-white text-base transition-all">Internship Drive</Link>
+                      </li>
+                    </ul>
+          </div>
+        </div>
+        </div>
+      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Mobile menu */}
+      <AnimatePresence>
       {isMobileMenuOpen && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="md:hidden bg-slate-800/95 backdrop-blur-md border-t border-slate-700/50"
-        >
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            <Link to="/" className="block px-3 py-2 rounded-lg text-base font-medium text-white hover:bg-white/10 hover:text-white/90 transition-all duration-200 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
+            transition={{ duration: 0.3 }}
+            className="md:hidden bg-black/95 backdrop-blur-xl"
+          >
+            <div className="container mx-auto px-6 py-8">
+              <nav className="flex flex-col gap-6">
+                <Link 
+                  to="/"
+                  className="text-white uppercase font-semibold text-lg tracking-wider"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
               Home
             </Link>
-            
-            <Link to="/about" className="block px-3 py-2 rounded-lg text-base font-medium text-white hover:bg-white/10 hover:text-white/90 transition-all duration-200 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+                <Link 
+                  to="/about" 
+                  className="text-white uppercase font-semibold text-lg tracking-wider"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
               About
             </Link>
-            
-            {/* Mobile Academics Dropdown */}
-            <div className="relative">
+                <div>
               <button
                 onClick={() => setActive(active === 'academics-mobile' ? null : 'academics-mobile')}
-                className="w-full text-left block px-3 py-2 rounded-lg text-base font-medium text-white hover:bg-white/10 hover:text-white/90 transition-all duration-200 flex items-center gap-2"
+                    className="flex items-center justify-between w-full text-white uppercase font-semibold text-lg tracking-wider"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    <span>Academics</span>
+                    <svg className={`w-4 h-4 transition-transform duration-200 ${active === 'academics-mobile' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
-                Academics
               </button>
               
+                  <AnimatePresence>
               {active === 'academics-mobile' && (
-                <div className="pl-4 bg-white/10 backdrop-blur-sm rounded-lg mt-1">
-                  <Link to="/academics/certifications" className="block px-3 py-2 text-sm text-white hover:bg-white/10 hover:text-white/90 transition-all duration-200">
-                    Certifications
-                  </Link>
-                  <div className="pl-4">
-                    <Link to="/academics/certifications/nptel" className="block px-3 py-1 text-xs text-white/80 hover:bg-white/10 hover:text-white transition-all duration-200">
-                      NPTEL
-                    </Link>
-                    <Link to="/academics/certifications/udemy" className="block px-3 py-1 text-xs text-white/80 hover:bg-white/10 hover:text-white transition-all duration-200">
-                      UDEMY
-                    </Link>
-                    <Link to="/academics/certifications/springboot" className="block px-3 py-1 text-xs text-white/80 hover:bg-white/10 hover:text-white transition-all duration-200">
-                      SPRINGBOOT
-                    </Link>
-                  </div>
-                  <Link to="/academics/achievements" className="block px-3 py-2 text-sm text-white hover:bg-white/10 hover:text-white/90 transition-all duration-200">
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="pl-4 mt-2 border-l border-white/20 space-y-2"
+                      >
+                        <Link to="/academics/achievements" className="block py-2 text-white/80 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
                     Achievements
                   </Link>
-                  <Link to="/academics/research" className="block px-3 py-2 text-sm text-white hover:bg-white/10 hover:text-white/90 transition-all duration-200">
+                        <Link to="/academics/research" className="block py-2 text-white/80 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
                     Research Papers
                   </Link>
-                  <Link to="/academics/placements" className="block px-3 py-2 text-sm text-white hover:bg-white/10 hover:text-white/90 transition-all duration-200">
+                        <Link to="/academics/placements" className="block py-2 text-white/80 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
                     Placements
                   </Link>
-                </div>
+                      </motion.div>
               )}
+                  </AnimatePresence>
             </div>
             
-            {/* Mobile Events Dropdown */}
-            <div className="relative">
+                <div>
               <button
                 onClick={() => setActive(active === 'events-mobile' ? null : 'events-mobile')}
-                className="w-full text-left block px-3 py-2 rounded-lg text-base font-medium text-white hover:bg-white/10 hover:text-white/90 transition-all duration-200 flex items-center gap-2"
+                    className="flex items-center justify-between w-full text-white uppercase font-semibold text-lg tracking-wider"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <span>Events</span>
+                    <svg className={`w-4 h-4 transition-transform duration-200 ${active === 'events-mobile' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
-                Events
               </button>
               
+                  <AnimatePresence>
               {active === 'events-mobile' && (
-                <div className="pl-4 bg-white/10 backdrop-blur-sm rounded-lg mt-1">
-                  <Link to="/events/seminars" className="block px-3 py-2 text-sm text-white hover:bg-white/10 hover:text-white/90 transition-all duration-200">
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="pl-4 mt-2 border-l border-white/20 space-y-2"
+                      >
+                        <Link to="/events/seminars" className="block py-2 text-white/80 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
                     SDP / Technical Seminar
                   </Link>
-                  <Link to="/events/hackathon" className="block px-3 py-2 text-sm text-white hover:bg-white/10 hover:text-white/90 transition-all duration-200">
+                        <Link to="/events/hackathon" className="block py-2 text-white/80 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
                     Hackathon
                   </Link>
-                  <Link to="/events/industrial" className="block px-3 py-2 text-sm text-white hover:bg-white/10 hover:text-white/90 transition-all duration-200">
-                    Industrial Events
-                  </Link>
-                  <Link to="/events/sports" className="block px-3 py-2 text-sm text-white hover:bg-white/10 hover:text-white/90 transition-all duration-200">
-                    Sports
-                  </Link>
-                  <Link to="/events/cultural" className="block px-3 py-2 text-sm text-white hover:bg-white/10 hover:text-white/90 transition-all duration-200">
+                        <Link to="/events/cultural" className="block py-2 text-white/80 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
                     Cultural Events
                   </Link>
-                </div>
+                      </motion.div>
               )}
+                  </AnimatePresence>
             </div>
             
-            <Link to="/students" className="block px-3 py-2 rounded-lg text-base font-medium text-white hover:bg-white/10 hover:text-white/90 transition-all duration-200 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
+                <Link 
+                  to="/students" 
+                  className="text-white uppercase font-semibold text-lg tracking-wider"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
               Students
             </Link>
+                
+                <Link 
+                  to="/contact"
+                  className="inline-block btn btn--orange hover--white px-6 py-3 bg-orange-500 hover:bg-white text-white hover:text-orange-500 uppercase text-sm font-bold tracking-wider rounded transition-all duration-300"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Contact
+                </Link>
+              </nav>
           </div>
         </motion.div>
       )}
+      </AnimatePresence>
     </header>
   );
 };

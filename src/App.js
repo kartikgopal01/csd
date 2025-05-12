@@ -19,6 +19,7 @@ const AdminResearch = React.lazy(() => import('./pages/admin/AdminResearch'));
 const AdminPlacements = React.lazy(() => import('./pages/admin/AdminPlacements'));
 const AdminEvents = React.lazy(() => import('./pages/admin/AdminEvents'));
 const AdminStudents = React.lazy(() => import('./pages/admin/AdminStudents'));
+const AdminFaculty = React.lazy(() => import('./pages/admin/AdminFaculty'));
 const Certifications = React.lazy(() => import('./pages/academics/Certifications'));
 const Achievements = React.lazy(() => import('./pages/academics/Achievements'));
 const Research = React.lazy(() => import('./pages/academics/Research'));
@@ -26,6 +27,8 @@ const Placements = React.lazy(() => import('./pages/academics/Placements'));
 const Events = React.lazy(() => import('./pages/events/Events'));
 const Students = React.lazy(() => import('./pages/students/Students'));
 const StudentDetail = React.lazy(() => import('./pages/students/StudentDetail'));
+const Faculty = React.lazy(() => import('./pages/faculty/Faculty'));
+const FacultyDetail = React.lazy(() => import('./pages/faculty/FacultyDetail'));
 const AboutPage = React.lazy(() => import('./pages/about/AboutPage'));
 
 // Admin protected route component
@@ -171,6 +174,22 @@ function App() {
           </Layout>
         } />
         
+        {/* Faculty routes */}
+        <Route path="/faculty" element={
+          <Layout>
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <Faculty />
+            </React.Suspense>
+          </Layout>
+        } />
+        <Route path="/faculty/:id" element={
+          <Layout>
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <FacultyDetail />
+            </React.Suspense>
+          </Layout>
+        } />
+        
         {/* Auth routes */}
         <Route path="/admin/login" element={<Login />} />
         <Route path="/admin/signup" element={<AdminSignup />} />
@@ -235,6 +254,15 @@ function App() {
             <AdminDashboard>
               <React.Suspense fallback={<div>Loading...</div>}>
                 <AdminStudents />
+              </React.Suspense>
+            </AdminDashboard>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/faculty" element={
+          <AdminProtectedRoute>
+            <AdminDashboard>
+              <React.Suspense fallback={<div>Loading...</div>}>
+                <AdminFaculty />
               </React.Suspense>
             </AdminDashboard>
           </AdminProtectedRoute>

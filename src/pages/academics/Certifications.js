@@ -5,6 +5,28 @@ import { useParams } from 'react-router-dom';
 import PDFViewer from '../../components/ui/PDFViewer';
 import { motion } from 'framer-motion';
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.22, 1, 0.36, 1]
+    }
+  }
+};
+
 const Certifications = () => {
   const { type } = useParams();
   const [certifications, setCertifications] = useState([]);
@@ -42,7 +64,6 @@ const Certifications = () => {
         ...doc.data()
       }));
       
-      // Sort by date (newest first)
       certificationsData.sort((a, b) => {
         return new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp);
       });
@@ -58,12 +79,12 @@ const Certifications = () => {
   const tabs = [
     { id: 'ALL', label: 'All' },
     { id: 'NPTEL', label: 'NPTEL' },
-    { id: 'UDEMY', label: 'UDEMY' },
-    { id: 'SPRINGBOOT', label: 'SPRINGBOOT' },
+    { id: 'UDEMY', label: 'Udemy' },
+    { id: 'SPRINGBOOT', label: 'SpringBoot' },
   ];
 
   return (
-    <div className="py-12 bg-gray-50">
+    <div className="min-h-screen bg-black text-white py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -71,111 +92,121 @@ const Certifications = () => {
           transition={{ duration: 0.5 }}
           className="text-center"
         >
-          <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Student Certifications
-          </h1>
-          <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-500">
+          <h1 className="text-5xl font-bold mb-6">Student Certifications</h1>
+          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
             Showcasing the achievements and skills acquired by our students.
           </p>
         </motion.div>
 
-        <div className="mt-10">
+        <div className="mt-16">
           {/* Tabs */}
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="flex justify-center mb-12"
+          >
+            <nav className="flex space-x-2 p-1 bg-white/5 backdrop-blur-lg rounded-lg" aria-label="Tabs">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`
-                    whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+                    px-6 py-2.5 text-sm font-medium rounded-md transition-all duration-300
                     ${activeTab === tab.id
-                      ? 'border-indigo-500 text-indigo-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+                      ? 'bg-white/10 text-white shadow-lg'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'}
                   `}
                 >
                   {tab.label}
                 </button>
               ))}
             </nav>
-          </div>
+          </motion.div>
 
           {/* Content */}
-          <div className="mt-8">
+          <div className="mt-12">
             {loading ? (
               <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
               </div>
             ) : certifications.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500">No certifications found for this category.</p>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="text-center py-12"
+              >
+                <p className="text-gray-400">No certifications found for this category.</p>
+              </motion.div>
             ) : (
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
+              >
                 {certifications.map((cert) => (
                   <motion.div
                     key={cert.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="bg-white rounded-lg shadow-md overflow-hidden"
+                    variants={itemVariants}
+                    className="group bg-white/5 backdrop-blur-lg rounded-xl overflow-hidden hover:bg-white/10 transition-all duration-300"
                   >
                     {cert.imageBase64 ? (
-                      <div className="h-48 overflow-hidden">
+                      <div className="aspect-video">
                         <img
                           src={cert.imageBase64}
                           alt={cert.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                     ) : (
-                      <div className="h-48 bg-gray-200 flex items-center justify-center">
-                        <svg
-                          className="h-12 w-12 text-gray-400"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
+                      <div className="aspect-video bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
+                        <span className="text-4xl font-bold text-white/30">{cert.certType}</span>
                       </div>
                     )}
+                    
                     <div className="p-6">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">{cert.title}</h3>
-                          <p className="mt-1 text-sm text-gray-600">{cert.studentName}</p>
-                        </div>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <div className="flex justify-between items-start mb-4">
+                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300">
                           {cert.certType}
                         </span>
+                        {cert.date && (
+                          <span className="text-xs text-gray-500">
+                            {new Date(cert.date).toLocaleDateString()}
+                          </span>
+                        )}
                       </div>
-                      {cert.description && (
-                        <p className="mt-3 text-sm text-gray-500">{cert.description}</p>
-                      )}
-                      {cert.date && (
-                        <p className="mt-2 text-xs text-gray-400">
-                          {new Date(cert.date).toLocaleDateString()}
-                        </p>
-                      )}
-                      <div className="mt-4">
-                        <button
-                          onClick={() => setSelectedCertification(cert)}
-                          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
-                        >
-                          View Certificate
-                        </button>
+                      
+                      <h3 className="text-xl font-bold text-white mb-3">{cert.title}</h3>
+                      
+                      <div className="flex items-center mt-6">
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
+                            <span className="text-white font-medium">
+                              {cert.studentName ? cert.studentName.charAt(0).toUpperCase() : 'S'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm font-medium text-white">{cert.studentName}</p>
+                          <p className="text-xs text-gray-500">Computer Science & Design</p>
+                        </div>
                       </div>
+                      
+                      <button
+                        onClick={() => setSelectedCertification(cert)}
+                        className="mt-6 w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                          <path d="M12 6v6m0 0v6m0-6h6m-6 0H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                        View Certificate
+                      </button>
                     </div>
                   </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
           </div>
         </div>
@@ -186,28 +217,28 @@ const Certifications = () => {
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+              <div className="absolute inset-0 bg-black opacity-75"></div>
             </div>
 
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div className="inline-block align-bottom bg-black rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full border border-white/10">
+              <div className="bg-black px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                    <h3 className="text-2xl font-bold text-white mb-4">
                       {selectedCertification.title}
                     </h3>
-                    <div className="mt-4 h-[600px]">
+                    <div className="mt-4 h-[600px] bg-white/5 rounded-lg">
                       <PDFViewer driveLink={selectedCertification.driveLink} />
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <div className="bg-white/5 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button
                   type="button"
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-white/10 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300"
                   onClick={() => setSelectedCertification(null)}
                 >
                   Close
