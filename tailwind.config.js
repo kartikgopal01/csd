@@ -4,6 +4,7 @@ module.exports = {
     "./src/**/*.{js,jsx,ts,tsx}",
     "./public/**/*.html",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -52,6 +53,23 @@ module.exports = {
           800: '#2c5550',
           900: '#274745',
         },
+        gradient: {
+          pink: {
+            light: '#F9B0B9',
+            DEFAULT: '#f472b6',
+            dark: '#db2777'
+          },
+          violet: {
+            light: '#c4b5fd',
+            DEFAULT: '#8b5cf6',
+            dark: '#7c3aed'
+          },
+          emerald: {
+            light: '#6ee7b7',
+            DEFAULT: '#10b981',
+            dark: '#059669'
+          }
+        }
       },
       fontFamily: {
         display: ['Playfair Display', 'serif'],
@@ -69,6 +87,9 @@ module.exports = {
         'lg': '24px',
         'xl': '32px',
       },
+      backgroundImage: {
+        'light-gradient': 'linear-gradient(to right, #F9B0B9, #c4b5fd, #6ee7b7)',
+      }
     },
   },
   plugins: [],

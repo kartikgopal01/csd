@@ -3,11 +3,19 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HoveredLink } from '../ui/navbar-menu';
 import { cn } from '../../lib/utils';
+import { useTheme } from '../../contexts/ThemeContext';
+import { HomeIcon, UserGroupIcon, AcademicCapIcon, CalendarIcon, UserIcon, PhoneIcon, ChevronLeftIcon, ChevronRightIcon, Bars3Icon } from '@heroicons/react/24/outline';
+import { RiMenu3Fill, RiCloseFill } from 'react-icons/ri';
+import { MdKeyboardArrowDown } from 'react-icons/md';
 
 const Navbar = () => {
   const [active, setActive] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [activeSubmenu, setActiveSubmenu] = useState(null);
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,85 +26,204 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const navLinks = [
+    { name: 'Home', icon: HomeIcon, path: '/' },
+    { name: 'About', icon: UserGroupIcon, path: '/about' },
+    { 
+      name: 'Academics', 
+      icon: AcademicCapIcon, 
+      path: '/academics', 
+      hasSubmenu: true,
+      submenu: [
+        { name: 'Undergraduate', path: '/academics/undergraduate' },
+        { name: 'Postgraduate', path: '/academics/postgraduate' },
+        { name: 'Research', path: '/academics/research' },
+      ]
+    },
+    { 
+      name: 'Events', 
+      icon: CalendarIcon, 
+      path: '/events', 
+      hasSubmenu: true,
+      submenu: [
+        { name: 'Technical Events', path: '/events/technical' },
+        { name: 'Cultural Events', path: '/events/cultural' },
+        { name: 'Workshops', path: '/events/workshops' },
+      ]
+    },
+    { name: 'Students', icon: UserIcon, path: '/students' },
+    { name: 'Contact', icon: PhoneIcon, path: '/contact' },
+  ];
+
   return (
-    <header className={`${isScrolled 
-      ? 'bg-black/95 backdrop-blur-md shadow-lg'
-      : 'bg-black'} 
-      w-full z-50 transition-all duration-300  `}>
-      <div className="container mx-auto px-6 py-8">
-        <div className="flex justify-between items-center">
-          {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <img src="/icon.png" alt="Department Logo" className="h-22 w-20 mr-2 drop-shadow-lg" />
-          </Link>
+    <>
+      <header className={`${isScrolled 
+        ? isLight ? 'bg-gray-50/95 backdrop-blur-md border-b border-neutral-200' : 'bg-black/95 backdrop-blur-md border-b border-white/10'
+        : isLight ? 'bg-gray-50 relative overflow-hidden before:absolute before:w-12 before:h-12 before:content-[\'\'] before:right-0 before:top-0 before:bg-violet-500 before:rounded-full before:blur-lg before:opacity-70 before:[box-shadow:-30px_10px_10px_5px_#F9B0B9]' : 'bg-black'} 
+        w-full z-[90] transition-all duration-300`}>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-3 relative z-10 rounded-full">
+          <div className="flex justify-center items-center">
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className={`p-2.5 rounded-xl ${isLight 
+                  ? 'bg-white/70 text-pink-500 hover:bg-pink-50/50' 
+                  : 'bg-white/10 text-white hover:bg-white/20'} backdrop-blur-sm transition-all duration-300`}
+              >
+                {isMobileMenuOpen ? (
+                  <RiCloseFill className="w-6 h-6" />
+                ) : (
+                  <RiMenu3Fill className="w-6 h-6" />
+                )}
+              </button>
+            </div>
 
-        {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <nav>
-              <ul className="flex gap-8 items-center">
-                <li>
-                  <Link to="/" className="text-white hover:text-white/90 uppercase font-semibold text-base tracking-wider transition-all duration-200">
-                Home
-              </Link>
-                </li>
-                <li>
-                  <Link to="/about" className="text-white hover:text-white/90 uppercase font-semibold text-base tracking-wider transition-all duration-200">
-                About
-              </Link>
-                </li>
-                <li>
-                  <div 
-                    className="flex items-center text-white hover:text-white/90 uppercase font-semibold text-base tracking-wider cursor-pointer transition-all duration-200 pt-10 pb-10"
-                    onMouseEnter={() => setActive('academics')}
-                    onMouseLeave={() => setActive(null)}
-                  >
-                    Academics
-                    <svg className="ml-2 w-4 h-4 text-white/70 group-hover:text-white transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                  </div>
-                </li>
-                <li>
-                  <div 
-                    className="flex items-center text-white hover:text-white/90 uppercase font-semibold text-base tracking-wider cursor-pointer transition-all duration-200"
-                    onMouseEnter={() => setActive('events')}
-                    onMouseLeave={() => setActive(null)}
-                  >
-                    Events
-                    <svg className="ml-2 w-4 h-4 text-white/70 group-hover:text-white transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                  </div>
-                </li>
-                <li>
-                  <Link to="/students" className="text-white hover:text-white/90 uppercase font-semibold text-base tracking-wider transition-all duration-200">
-                    Students
-                  </Link>
-                </li>
-              </ul>
-            </nav>
-            <Link 
-              to="/contact"
-              className="btn btn--orange hover--white px-8 py-3 bg-orange-500 hover:bg-white text-white hover:text-orange-500 uppercase text-base font-bold tracking-wider rounded transition-all duration-300"
-            >
-              Contact
-            </Link>
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-2 lg:gap-3">
+              <nav className={`rounded-full px-3 py-1 relative ${isLight 
+                ? 'bg-gray-50 border border-pink-200 hover:border-violet-300' 
+                : 'bg-white/5 border border-white/20 hover:border-white/40'} transition-all duration-300`}>
+                <ul className="flex gap-2 lg:gap-3 items-center">
+                  {navLinks.map((link) => (
+                    <li key={link.name} className="relative">
+                      {link.hasSubmenu ? (
+                        <div 
+                          className={`group relative overflow-hidden rounded-full px-4 py-1.5 ${isLight 
+                            ? 'text-pink-400 hover:text-violet-600 before:absolute before:w-12 before:h-12 before:content-[\'\'] before:right-0 before:bg-violet-500 before:rounded-full before:blur-lg before:opacity-0 hover:before:opacity-70 before:[box-shadow:-30px_10px_10px_5px_#F9B0B9]' 
+                            : 'text-white/80 hover:text-white'} font-medium text-sm tracking-wide cursor-pointer transition-all duration-300 flex items-center`}
+                          onMouseEnter={() => setActive(link.name.toLowerCase())}
+                          onMouseLeave={() => setActive(null)}
+                        >
+                          <span className="relative z-10">{link.name}</span>
+                          <svg className="ml-1.5 w-4 h-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+
+                          {/* Dropdown Menu */}
+                          <AnimatePresence>
+                            {active === link.name.toLowerCase() && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2 }}
+                                className={`absolute top-full left-0 w-48 ${isLight 
+                                  ? 'bg-white border border-pink-200' 
+                                  : 'bg-black/95 border border-white/20'} rounded-2xl shadow-lg backdrop-blur-xl mt-2 overflow-hidden z-50`}
+                                onMouseEnter={() => setActive(link.name.toLowerCase())}
+                                onMouseLeave={() => setActive(null)}
+                              >
+                                <div className="p-2">
+                                  <div className="grid gap-1">
+                                    {link.submenu.map((item) => (
+                                      <Link
+                                        key={item.name}
+                                        to={item.path}
+                                        className={`block px-4 py-2 rounded-xl ${isLight 
+                                          ? 'text-pink-400 hover:text-violet-600 hover:bg-violet-50/50' 
+                                          : 'text-white/80 hover:text-white hover:bg-white/10'} transition-all duration-300`}
+                                      >
+                                        {item.name}
+                                      </Link>
+                                    ))}
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      ) : (
+                        <Link 
+                          to={link.path}
+                          className={`group relative overflow-hidden rounded-full px-4 py-1.5 ${isLight 
+                            ? 'text-pink-400 hover:text-violet-600 before:absolute before:w-12 before:h-12 before:content-[\'\'] before:right-0 before:bg-violet-500 before:rounded-full before:blur-lg before:opacity-0 hover:before:opacity-70 before:[box-shadow:-30px_10px_10px_5px_#F9B0B9]' 
+                            : 'text-white/80 hover:text-white'} font-medium text-sm tracking-wide transition-all duration-300`}
+                        >
+                          <span className="relative z-10">{link.name}</span>
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden  pb-10">
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-white focus:outline-none"
-              aria-label="Toggle menu"
-            >
-              <div className="w-8 h-7 flex flex-col justify-between">
-                <span className={`block w-full h-0.5 bg-white transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-3' : ''}`}></span>
-                <span className={`block w-full h-0.5 bg-white transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : 'opacity-100'}`}></span>
-                <span className={`block w-full h-0.5 bg-white transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-3' : ''}`}></span>
-              </div>
-            </button>
-          </div>
+          {/* Mobile Navigation Menu */}
+          <AnimatePresence>
+            {isMobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className={`md:hidden mt-4 rounded-2xl ${isLight 
+                  ? 'bg-white/70 backdrop-blur-xl border border-white/20' 
+                  : 'bg-black/70 backdrop-blur-xl border border-white/10'} overflow-hidden`}
+              >
+                <nav className="p-3">
+                  <div className="space-y-2">
+                    {navLinks.map((link) => (
+                      <div key={link.name}>
+                        {link.hasSubmenu ? (
+                          <div>
+                            <button
+                              onClick={() => setActiveSubmenu(activeSubmenu === link.name ? null : link.name)}
+                              className={`flex items-center justify-between w-full px-4 py-3 rounded-xl ${isLight 
+                                ? 'bg-white/50 text-pink-500 hover:bg-pink-50/50' 
+                                : 'bg-white/5 text-white hover:bg-white/10'} backdrop-blur-sm transition-all duration-300`}
+                            >
+                              <span className="font-medium">{link.name}</span>
+                              <MdKeyboardArrowDown 
+                                className={`w-5 h-5 transition-transform ${activeSubmenu === link.name ? 'rotate-180' : ''}`} 
+                              />
+                            </button>
+                            <AnimatePresence>
+                              {activeSubmenu === link.name && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: "auto" }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="mt-2 ml-4 space-y-2"
+                                >
+                                  {link.submenu.map((subItem) => (
+                                    <Link
+                                      key={subItem.name}
+                                      to={subItem.path}
+                                      className={`block px-4 py-3 rounded-xl ${isLight 
+                                        ? 'bg-white/30 text-pink-500 hover:bg-pink-50/50' 
+                                        : 'bg-white/5 text-white/90 hover:bg-white/10'} backdrop-blur-sm transition-all duration-300`}
+                                      onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                      {subItem.name}
+                                    </Link>
+                                  ))}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        ) : (
+                          <Link
+                            to={link.path}
+                            className={`flex items-center justify-between px-4 py-3 rounded-xl ${isLight 
+                              ? 'bg-white/50 text-pink-500 hover:bg-pink-50/50' 
+                              : 'bg-white/5 text-white hover:bg-white/10'} backdrop-blur-sm transition-all duration-300`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <span className="font-medium">{link.name}</span>
+                          </Link>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </nav>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
+      </header>
 
-      {/* Full-width mega dropdown menus */}
+      {/* Mega menus */}
       <AnimatePresence>
         {active === 'academics' && (
           <motion.div
@@ -104,67 +231,51 @@ const Navbar = () => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="w-full bg-black/95 border-t border-white/10 overflow-hidden"
+            className={`w-full fixed top-[60px] left-0 ${isLight 
+              ? 'bg-white/95 border-y border-pink-200' 
+              : 'bg-black/95 border-y border-white/10'} backdrop-blur-md z-50`}
             onMouseEnter={() => setActive('academics')}
             onMouseLeave={() => setActive(null)}
           >
-            <div className="container mx-auto py-12">
-              <div className="flex">
-                <div className="w-1/3 pr-12">
-                  <div className="rounded-lg overflow-hidden h-64 mb-4">
-                    <img 
-                      src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80" 
-                      alt="Academics" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-2">Academics</h3>
-                  <p className="text-white/70">Discover our academic programs, achievements, and resources designed to help students excel in computer science.</p>
-                </div>
-                <div className="w-2/3 grid grid-cols-3 gap-12">
-                  <div>
-                    <h4 className="text-lg font-bold text-white mb-4">Certifications</h4>
-                    <ul className="space-y-3">
-                      <li>
-                        <Link to="/academics/certifications/nptel" className="text-white/80 hover:text-white text-base transition-all">NPTEL</Link>
-                      </li>
-                      <li>
-                        <Link to="/academics/certifications/udemy" className="text-white/80 hover:text-white text-base transition-all">UDEMY</Link>
-                      </li>
-                      <li>
-                        <Link to="/academics/certifications/springboot" className="text-white/80 hover:text-white text-base transition-all">SPRINGBOOT</Link>
-                      </li>
-                    </ul>
-                    </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-white mb-4">Resources</h4>
-                    <ul className="space-y-3">
-                      <li>
-                        <Link to="/academics/achievements" className="text-white/80 hover:text-white text-base transition-all">Achievements</Link>
-                      </li>
-                      <li>
-                        <Link to="/academics/research" className="text-white/80 hover:text-white text-base transition-all">Research Papers</Link>
-                      </li>
-                      <li>
-                        <Link to="/academics/placements" className="text-white/80 hover:text-white text-base transition-all">Placements</Link>
-                      </li>
+            <div className="container mx-auto py-6">
+              <div className="grid grid-cols-3 gap-6">
+                {[
+                  { title: 'Programs', items: [
+                    { name: 'Undergraduate', path: '/academics/undergraduate' },
+                    { name: 'Postgraduate', path: '/academics/postgraduate' },
+                    { name: 'PhD', path: '/academics/phd' }
+                  ]},
+                  { title: 'Resources', items: [
+                    { name: 'Research Papers', path: '/academics/research' },
+                    { name: 'Achievements', path: '/academics/achievements' },
+                    { name: 'Placements', path: '/academics/placements' }
+                  ]},
+                  { title: 'Certifications', items: [
+                    { name: 'NPTEL', path: '/academics/certifications/nptel' },
+                    { name: 'UDEMY', path: '/academics/certifications/udemy' },
+                    { name: 'SPRINGBOOT', path: '/academics/certifications/springboot' }
+                  ]}
+                ].map((section, idx) => (
+                  <div key={idx} className="px-4">
+                    <h4 className={`text-lg font-semibold mb-4 ${isLight ? 'text-pink-400' : 'text-white'}`}>
+                      {section.title}
+                    </h4>
+                    <ul className="space-y-2">
+                      {section.items.map((item) => (
+                        <li key={item.name}>
+                          <Link
+                            to={item.path}
+                            className={`block px-4 py-2 rounded-xl ${isLight 
+                              ? 'text-pink-400 hover:text-violet-600 hover:bg-violet-50/50' 
+                              : 'text-white/80 hover:text-white hover:bg-white/10'} transition-all duration-300`}
+                          >
+                            {item.name}
+                          </Link>
+                        </li>
+                      ))}
                     </ul>
                   </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-white mb-4">Programs</h4>
-                    <ul className="space-y-3">
-                      <li>
-                        <Link to="/academics/undergraduate" className="text-white/80 hover:text-white text-base transition-all">Undergraduate</Link>
-                      </li>
-                      <li>
-                        <Link to="/academics/postgraduate" className="text-white/80 hover:text-white text-base transition-all">Postgraduate</Link>
-                      </li>
-                      <li>
-                        <Link to="/academics/phd" className="text-white/80 hover:text-white text-base transition-all">PhD</Link>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </motion.div>
@@ -176,186 +287,203 @@ const Navbar = () => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="w-full bg-black/95 border-t border-white/10 overflow-hidden"
+            className={`w-full fixed top-[60px] left-0 ${isLight 
+              ? 'bg-white/95 border-y border-pink-200' 
+              : 'bg-black/95 border-y border-white/10'} backdrop-blur-md z-50`}
             onMouseEnter={() => setActive('events')}
             onMouseLeave={() => setActive(null)}
           >
-            <div className="container mx-auto py-12">
-              <div className="flex">
-                <div className="w-1/3 pr-12">
-                  <div className="rounded-lg overflow-hidden h-64 mb-4">
-                    <img 
-                      src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1700&q=80" 
-                      alt="Events" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-2">Events</h3>
-                  <p className="text-white/70">Explore our technical and non-technical events designed to enhance student learning and professional development.</p>
-                </div>
-                <div className="w-2/3 grid grid-cols-3 gap-12">
-                  <div>
-                    <h4 className="text-lg font-bold text-white mb-4">Technical Events</h4>
-                    <ul className="space-y-3">
-                      <li>
-                        <Link to="/events/seminars" className="text-white/80 hover:text-white text-base transition-all">SDP / Technical Seminar</Link>
-                      </li>
-                      <li>
-                        <Link to="/events/hackathon" className="text-white/80 hover:text-white text-base transition-all">Hackathon</Link>
-                      </li>
-                      <li>
-                        <Link to="/events/workshops" className="text-white/80 hover:text-white text-base transition-all">Workshops</Link>
-                      </li>
+            <div className="container mx-auto py-6">
+              <div className="grid grid-cols-3 gap-6">
+                {[
+                  { title: 'Technical Events', items: [
+                    { name: 'SDP / Technical Seminar', path: '/events/seminars' },
+                    { name: 'Hackathon', path: '/events/hackathon' },
+                    { name: 'Workshops', path: '/events/workshops' }
+                  ]},
+                  { title: 'Non-Technical Events', items: [
+                    { name: 'Cultural Events', path: '/events/cultural' },
+                    { name: 'Sports', path: '/events/sports' },
+                    { name: 'Club Activities', path: '/events/clubs' }
+                  ]},
+                  { title: 'Industry Connect', items: [
+                    { name: 'Industrial Visits', path: '/events/industrial' },
+                    { name: 'Guest Lectures', path: '/events/guest-lectures' },
+                    { name: 'Internship Drive', path: '/events/internships' }
+                  ]}
+                ].map((section, idx) => (
+                  <div key={idx} className="px-4">
+                    <h4 className={`text-lg font-semibold mb-4 ${isLight ? 'text-pink-400' : 'text-white'}`}>
+                      {section.title}
+                    </h4>
+                    <ul className="space-y-2">
+                      {section.items.map((item) => (
+                        <li key={item.name}>
+                          <Link
+                            to={item.path}
+                            className={`block px-4 py-2 rounded-xl ${isLight 
+                              ? 'text-pink-400 hover:text-violet-600 hover:bg-violet-50/50' 
+                              : 'text-white/80 hover:text-white hover:bg-white/10'} transition-all duration-300`}
+                          >
+                            {item.name}
+                          </Link>
+                        </li>
+                      ))}
                     </ul>
                   </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-white mb-4">Non-Technical Events</h4>
-                    <ul className="space-y-3">
-                      <li>
-                        <Link to="/events/cultural" className="text-white/80 hover:text-white text-base transition-all">Cultural Events</Link>
-                      </li>
-                      <li>
-                        <Link to="/events/sports" className="text-white/80 hover:text-white text-base transition-all">Sports</Link>
-                      </li>
-                      <li>
-                        <Link to="/events/clubs" className="text-white/80 hover:text-white text-base transition-all">Club Activities</Link>
-                      </li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-white mb-4">Industry Connect</h4>
-                    <ul className="space-y-3">
-                      <li>
-                        <Link to="/events/industrial" className="text-white/80 hover:text-white text-base transition-all">Industrial Visits</Link>
-                      </li>
-                      <li>
-                        <Link to="/events/guest-lectures" className="text-white/80 hover:text-white text-base transition-all">Guest Lectures</Link>
-                      </li>
-                      <li>
-                        <Link to="/events/internships" className="text-white/80 hover:text-white text-base transition-all">Internship Drive</Link>
-                      </li>
-                    </ul>
-          </div>
-        </div>
-        </div>
-      </div>
+                ))}
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Mobile menu */}
+      {/* Scrolled Mobile Navigation */}
       <AnimatePresence>
-      {isMobileMenuOpen && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="md:hidden bg-black/95 backdrop-blur-xl"
+        {isScrolled && (
+          <motion.div
+            initial={{ width: "auto", y: -100 }}
+            animate={{ 
+              width: "auto",
+              y: 0,
+              transition: {
+                width: { duration: 0.3, ease: "easeInOut" },
+                y: { duration: 0.3, ease: "easeInOut" }
+              }
+            }}
+            exit={{ width: "auto", y: -100 }}
+            className={`fixed top-4 left-4 right-4 md:hidden ${isLight 
+              ? 'bg-white/70 backdrop-blur-xl border border-white/20' 
+              : 'bg-black/70 backdrop-blur-xl border border-white/10'} 
+              rounded-2xl z-[100] shadow-lg transition-all duration-300`}
           >
-            <div className="container mx-auto px-6 py-8">
-              <nav className="flex flex-col gap-6">
-                <Link 
-                  to="/"
-                  className="text-white uppercase font-semibold text-lg tracking-wider"
-                  onClick={() => setIsMobileMenuOpen(false)}
+            <nav className="container mx-auto px-4 py-3">
+              <div className="flex items-center justify-between">
+                <span className={`text-lg font-medium ${isLight ? 'text-pink-500' : 'text-white'}`}>
+                  Menu
+                </span>
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className={`p-2 rounded-full ${isLight 
+                    ? 'bg-pink-100/50 text-pink-500 hover:bg-pink-200/50' 
+                    : 'bg-white/10 text-white hover:bg-white/20'} backdrop-blur-sm`}
                 >
-              Home
-            </Link>
-                <Link 
-                  to="/about" 
-                  className="text-white uppercase font-semibold text-lg tracking-wider"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-              About
-            </Link>
-                <div>
-              <button
-                onClick={() => setActive(active === 'academics-mobile' ? null : 'academics-mobile')}
-                    className="flex items-center justify-between w-full text-white uppercase font-semibold text-lg tracking-wider"
-              >
-                    <span>Academics</span>
-                    <svg className={`w-4 h-4 transition-transform duration-200 ${active === 'academics-mobile' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-              </button>
-              
-                  <AnimatePresence>
-              {active === 'academics-mobile' && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="pl-4 mt-2 border-l border-white/20 space-y-2"
-                      >
-                        <Link to="/academics/achievements" className="block py-2 text-white/80 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
-                    Achievements
-                  </Link>
-                        <Link to="/academics/research" className="block py-2 text-white/80 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
-                    Research Papers
-                  </Link>
-                        <Link to="/academics/placements" className="block py-2 text-white/80 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
-                    Placements
-                  </Link>
-                      </motion.div>
-              )}
-                  </AnimatePresence>
-            </div>
-            
-                <div>
-              <button
-                onClick={() => setActive(active === 'events-mobile' ? null : 'events-mobile')}
-                    className="flex items-center justify-between w-full text-white uppercase font-semibold text-lg tracking-wider"
-              >
-                    <span>Events</span>
-                    <svg className={`w-4 h-4 transition-transform duration-200 ${active === 'events-mobile' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-              </button>
-              
-                  <AnimatePresence>
-              {active === 'events-mobile' && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="pl-4 mt-2 border-l border-white/20 space-y-2"
-                      >
-                        <Link to="/events/seminars" className="block py-2 text-white/80 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
-                    SDP / Technical Seminar
-                  </Link>
-                        <Link to="/events/hackathon" className="block py-2 text-white/80 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
-                    Hackathon
-                  </Link>
-                        <Link to="/events/cultural" className="block py-2 text-white/80 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
-                    Cultural Events
-                  </Link>
-                      </motion.div>
-              )}
-                  </AnimatePresence>
-            </div>
-            
-                <Link 
-                  to="/students" 
-                  className="text-white uppercase font-semibold text-lg tracking-wider"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-              Students
-            </Link>
-                
-                <Link 
-                  to="/contact"
-                  className="inline-block btn btn--orange hover--white px-6 py-3 bg-orange-500 hover:bg-white text-white hover:text-orange-500 uppercase text-sm font-bold tracking-wider rounded transition-all duration-300"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Contact
-                </Link>
-              </nav>
-          </div>
-        </motion.div>
-      )}
+                  {isMobileMenuOpen ? (
+                    <RiCloseFill className="w-6 h-6" />
+                  ) : (
+                    <RiMenu3Fill className="w-6 h-6" />
+                  )}
+                </button>
+              </div>
+
+              <AnimatePresence>
+                {isMobileMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-4"
+                  >
+                    {navLinks.map((link) => (
+                      <div key={link.name} className="mb-2">
+                        {link.hasSubmenu ? (
+                          <div>
+                            <button
+                              onClick={() => setActiveSubmenu(activeSubmenu === link.name ? null : link.name)}
+                              className={`flex items-center justify-between w-full px-4 py-3 rounded-xl ${isLight 
+                                ? 'bg-white/50 text-pink-500 hover:bg-pink-50/50' 
+                                : 'bg-white/5 text-white hover:bg-white/10'} backdrop-blur-sm transition-all duration-300`}
+                            >
+                              <span className="font-medium">{link.name}</span>
+                              <MdKeyboardArrowDown 
+                                className={`w-5 h-5 transition-transform ${activeSubmenu === link.name ? 'rotate-180' : ''}`} 
+                              />
+                            </button>
+                            <AnimatePresence>
+                              {activeSubmenu === link.name && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: "auto" }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="ml-4 mt-2 space-y-2"
+                                >
+                                  {link.submenu.map((subItem) => (
+                                    <Link
+                                      key={subItem.name}
+                                      to={subItem.path}
+                                      className={`block px-4 py-3 rounded-xl ${isLight 
+                                        ? 'bg-white/30 text-pink-500 hover:bg-pink-50/50' 
+                                        : 'bg-white/5 text-white/90 hover:bg-white/10'} backdrop-blur-sm transition-all duration-300`}
+                                      onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                      {subItem.name}
+                                    </Link>
+                                  ))}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        ) : (
+                          <Link
+                            to={link.path}
+                            className={`flex items-center justify-between px-4 py-3 rounded-xl ${isLight 
+                              ? 'bg-white/50 text-pink-500 hover:bg-pink-50/50' 
+                              : 'bg-white/5 text-white hover:bg-white/10'} backdrop-blur-sm transition-all duration-300`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <span className="font-medium">{link.name}</span>
+                          </Link>
+                        )}
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </nav>
+          </motion.div>
+        )}
       </AnimatePresence>
-    </header>
+
+      {/* Desktop Sticky Sidebar */}
+      <AnimatePresence>
+        {isScrolled && (
+          <motion.div
+            initial={{ width: "60px" }}
+            animate={{ width: isHovered ? "240px" : "60px" }}
+            exit={{ width: "60px" }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className={`fixed left-0 top-1/2 -translate-y-1/2 h-auto ${isLight 
+              ? 'bg-gray-50/95 backdrop-blur-xl border-r border-y border-neutral-200' 
+              : 'bg-black/95 backdrop-blur-xl border-r border-y border-white/10'} rounded-r-xl overflow-hidden z-[100] hidden md:block`}
+          >
+            <nav className="p-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 mb-1 last:mb-0 ${isLight 
+                    ? 'bg-gray-50 text-pink-400 hover:text-violet-600 before:absolute before:w-12 before:h-12 before:content-[\'\'] before:right-0 before:bg-violet-500 before:rounded-full before:blur-lg before:opacity-0 hover:before:opacity-70 before:[box-shadow:-30px_10px_10px_5px_#F9B0B9]' 
+                    : 'text-white/80 hover:text-white hover:bg-white/10'} transition-all duration-300 relative overflow-hidden whitespace-nowrap`}
+                  onClick={() => link.hasSubmenu && setActive(link.name.toLowerCase())}
+                >
+                  <link.icon className="w-5 h-5 min-w-[20px]" />
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: isHovered ? 1 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="relative z-10"
+                  >
+                    {link.name}
+                  </motion.span>
+                </Link>
+              ))}
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
