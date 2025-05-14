@@ -75,7 +75,7 @@ const AboutPage = () => {
           >
             <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">Program Overview</h2>
             <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-500">
-              A comprehensive program combining computer science and design principles.
+              A comprehensive program combining Computer Science and Design principles.
             </p>
           </motion.div>
 

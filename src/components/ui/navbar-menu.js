@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { useTheme } from "../../contexts/ThemeContext";
 
-export const Menu = ({ children, setActive }) => {
+export const Menu = ({ children }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
@@ -18,52 +17,20 @@ export const Menu = ({ children, setActive }) => {
   );
 };
 
-export const MenuItem = ({ setActive, active, item, children, href }) => {
-  const ref = useRef(null);
+export const MenuItem = ({ item, href }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
-  useEffect(() => {
-    if (active === item) {
-      ref.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }
-  }, [active, item]);
-
   return (
-    <li ref={ref} className="relative flex items-center justify-center">
-      <div
+    <li className="relative flex items-center justify-center">
+      <Link
+        to={href}
         className={`group relative overflow-hidden rounded-lg px-4 py-2 ${isLight 
           ? 'bg-gray-50 text-pink-400 hover:text-violet-600 before:absolute before:w-12 before:h-12 before:content-[\'\'] before:right-0 before:bg-violet-500 before:rounded-full before:blur-lg before:opacity-0 hover:before:opacity-70 before:[box-shadow:-30px_10px_10px_5px_#F9B0B9]' 
           : 'text-white/80 hover:text-white'} cursor-pointer transition-all duration-300`}
-        onMouseEnter={() => setActive(item)}
-        onMouseLeave={() => setActive(null)}
       >
         <span className="text-sm font-medium relative z-10">{item}</span>
-      </div>
-      {active === item && (
-        <div
-          onMouseEnter={() => setActive(item)}
-          onMouseLeave={() => setActive(null)}
-          className="absolute left-0 top-full pt-4 w-64"
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.2 }}
-            className={`overflow-hidden rounded-lg ${isLight 
-              ? 'bg-gray-50 border border-neutral-200 before:absolute before:w-12 before:h-12 before:content-[\'\'] before:right-0 before:bg-violet-500 before:rounded-full before:blur-lg before:opacity-70 before:[box-shadow:-30px_10px_10px_5px_#F9B0B9]' 
-              : 'bg-black/90 border border-white/20'} backdrop-blur-md p-4 shadow-xl relative`}
-          >
-            <div className="relative z-10">
-              {children}
-            </div>
-          </motion.div>
-        </div>
-      )}
+      </Link>
     </li>
   );
 };

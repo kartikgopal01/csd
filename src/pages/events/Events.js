@@ -1,85 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../../firebase/client';
-import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: [0.22, 1, 0.36, 1]
-    }
-  }
-};
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase/client';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Events = () => {
-  const { type } = useParams();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Map URL parameters to display names
-  const eventTypeMap = {
-    'seminars': 'SDP / Technical Seminar',
-    'hackathon': 'Hackathon',
-    'industrial': 'Industrial Events',
-    'sports': 'Sports',
-    'cultural': 'Cultural Events'
-  };
-
-  // Get the current event type display name
-  const currentEventType = type ? eventTypeMap[type] || type : 'All Events';
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('ALL');
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   useEffect(() => {
     fetchEvents();
-  }, [type]);
+  }, []);
 
   const fetchEvents = async () => {
-    setLoading(true);
     try {
-      let eventsQuery;
-      
-      if (!type) {
-        eventsQuery = collection(db, 'events');
-      } else {
-        eventsQuery = query(
-          collection(db, 'events'),
-          where('eventType', '==', eventTypeMap[type])
-        );
-      }
-      
-      const eventsSnapshot = await getDocs(eventsQuery);
+      const eventsCollection = collection(db, 'events');
+      const eventsSnapshot = await getDocs(eventsCollection);
       const eventsData = eventsSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-      
-      // Sort by date (upcoming first, then recent past events)
-      eventsData.sort((a, b) => {
-        const dateA = new Date(a.date || a.timestamp);
-        const dateB = new Date(b.date || b.timestamp);
-        const now = new Date();
-        
-        if ((dateA > now && dateB > now) || (dateA <= now && dateB <= now)) {
-          return dateA - dateB;
-        }
-        
-        return dateA > now ? -1 : 1;
-      });
-      
+      eventsData.sort((a, b) => new Date(b.date) - new Date(a.date));
       setEvents(eventsData);
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -88,286 +34,294 @@ const Events = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+  // Modal animation variants
+  const modalVariants = {
+    hidden: {
+      opacity: 0,
+      scale: 0.8,
+      y: 50
+    },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30
+      }
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.8,
+      y: 50,
+      transition: {
+        duration: 0.2
+      }
+    }
   };
 
-  const isUpcoming = (dateString) => {
-    return new Date(dateString) > new Date();
-  };
-
+  // Card component for events
+  const EventCard = ({ event }) => {
   return (
     <motion.div 
-      className="min-h-screen bg-gray-900 py-12"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        onClick={() => {
+          setSelectedEvent(event);
+          setIsModalOpen(true);
+        }}
+        className="relative group cursor-pointer rounded-2xl overflow-hidden aspect-[4/3]"
+        whileHover={{ scale: 1.02 }}
+        transition={{ duration: 0.2 }}
+            >
+        {/* Card Background */}
+        <div className="absolute inset-0">
+                            {event.imageBase64 ? (
+                                <img
+                                  src={event.imageBase64}
+                                  alt={event.title}
+              className="w-full h-full object-cover"
+                                />
+                            ) : (
+            <div className="w-full h-full bg-gradient-to-br from-violet-500/20 to-cyan-500/20" />
+          )}
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
+                                </div>
+
+        {/* Content */}
+        <div className="relative h-full p-6 flex flex-col justify-end text-white">
+          <div className="space-y-3 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+            <div className="flex justify-between items-center">
+              <span className="px-3 py-1 rounded-full text-sm bg-white/20 backdrop-blur-sm">
+                                  {event.eventType}
+                                </span>
+                              {event.date && (
+                <span className="text-sm text-white/80">
+                  {new Date(event.date).toLocaleDateString()}
+                </span>
+              )}
+            </div>
+            
+            <h3 className="text-xl font-bold leading-tight">
+              {event.title}
+            </h3>
+            
+            <p className="text-sm text-white/80 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                  {event.description}
+                                </p>
+                            </div>
+                    </div>
+                  </motion.div>
+    );
+  };
+
+  // Modal Component
+  const DetailModal = () => {
+    if (!selectedEvent) return null;
+
+    return (
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                          <motion.div
+              className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-2xl"
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/20 text-white hover:bg-black/30 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              {/* Image */}
+              <div className="relative h-64 sm:h-80">
+                {selectedEvent.imageBase64 ? (
+                                <img
+                    src={selectedEvent.imageBase64}
+                    alt={selectedEvent.title}
+                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-violet-500/20 to-cyan-500/20 flex items-center justify-center">
+                    <span className="text-4xl font-bold text-white/20">
+                      {selectedEvent.eventType}
+                    </span>
+                              </div>
+                            )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                </div>
+
+              {/* Content */}
+              <div className="relative p-6 sm:p-8">
+                <div className="flex justify-between items-start mb-4">
+                  <span className={`px-3 py-1 rounded-full text-sm ${
+                    isLight
+                      ? 'bg-violet-100 text-violet-800'
+                      : 'bg-violet-500/20 text-violet-400'
+                  }`}>
+                    {selectedEvent.eventType}
+                  </span>
+                  {selectedEvent.date && (
+                    <span className={isLight ? 'text-gray-500' : 'text-gray-400'}>
+                      {new Date(selectedEvent.date).toLocaleDateString()}
+                                </span>
+                  )}
+                              </div>
+
+                <h3 className={`text-2xl font-bold mb-4 ${
+                  isLight ? 'text-gray-900' : 'text-white'
+                }`}>
+                  {selectedEvent.title}
+                </h3>
+
+                <p className={`mb-6 ${
+                  isLight ? 'text-gray-600' : 'text-gray-400'
+                }`}>
+                  {selectedEvent.description}
+                                </p>
+
+                {selectedEvent.location && (
+                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {selectedEvent.location}
+                  </div>
+                              )}
+                            </div>
+                          </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    );
+  };
+
+  // Get unique event types
+  const eventTypes = ['ALL', ...new Set(events.map(event => event.eventType))];
+
+  // Filter events based on active tab
+  const filteredEvents = activeTab === 'ALL' 
+    ? events 
+    : events.filter(event => event.eventType === activeTab);
+
+  return (
+    <div className={`min-h-screen ${isLight 
+      ? 'bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100' 
+      : 'bg-[#030014] bg-grid-pattern'}`}>
+      
+      {/* Background Elements */}
+      <div className="absolute inset-0 w-full h-full">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob"></div>
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000"></div>
+      </div>
+
+      <div className="container mx-auto px-4 py-20 relative z-10">
         <motion.div
-          variants={itemVariants}
-          className="text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-16"
         >
-          <h1 className="text-4xl font-bold text-white sm:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-            {currentEventType}
+          <h1 className={`text-4xl md:text-5xl font-bold mb-6 ${
+            isLight 
+              ? 'bg-gradient-to-r from-violet-600 to-cyan-500 text-transparent bg-clip-text' 
+              : 'bg-gradient-to-r from-violet-400 to-cyan-400 text-transparent bg-clip-text'
+          }`}>
+            Events
           </h1>
-          <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-300">
-            Discover the exciting events happening in our department.
+          <p className={`text-xl ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>
+            Stay updated with the latest happenings in our department
           </p>
         </motion.div>
 
-        {/* Event Categories */}
-        <motion.div 
-          variants={itemVariants}
-          className="mt-10"
+        {/* Event Type Tabs */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="flex justify-center mb-12"
         >
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link 
-              to="/events/seminars"
-              className={`px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 backdrop-blur-sm ${
-                type === 'seminars' 
-                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50 shadow-lg shadow-blue-500/20' 
-                : 'bg-gray-800/50 text-gray-300 border border-gray-700 hover:bg-gray-700/50 hover:border-gray-600'
-              }`}
-            >
-              SDP / Technical Seminar
-            </Link>
-            <Link 
-              to="/events/hackathon"
-              className={`px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 backdrop-blur-sm ${
-                type === 'hackathon' 
-                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50 shadow-lg shadow-purple-500/20' 
-                : 'bg-gray-800/50 text-gray-300 border border-gray-700 hover:bg-gray-700/50 hover:border-gray-600'
-              }`}
-            >
-              Hackathon
-            </Link>
-            <Link 
-              to="/events/industrial"
-              className={`px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 backdrop-blur-sm ${
-                type === 'industrial' 
-                ? 'bg-green-500/20 text-green-400 border border-green-500/50 shadow-lg shadow-green-500/20' 
-                : 'bg-gray-800/50 text-gray-300 border border-gray-700 hover:bg-gray-700/50 hover:border-gray-600'
-              }`}
-            >
-              Industrial Events
-            </Link>
-            <Link 
-              to="/events/sports"
-              className={`px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 backdrop-blur-sm ${
-                type === 'sports' 
-                ? 'bg-orange-500/20 text-orange-400 border border-orange-500/50 shadow-lg shadow-orange-500/20' 
-                : 'bg-gray-800/50 text-gray-300 border border-gray-700 hover:bg-gray-700/50 hover:border-gray-600'
-              }`}
-            >
-              Sports
-            </Link>
-            <Link 
-              to="/events/cultural"
-              className={`px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 backdrop-blur-sm ${
-                type === 'cultural' 
-                ? 'bg-pink-500/20 text-pink-400 border border-pink-500/50 shadow-lg shadow-pink-500/20' 
-                : 'bg-gray-800/50 text-gray-300 border border-gray-700 hover:bg-gray-700/50 hover:border-gray-600'
-              }`}
-            >
-              Cultural Events
-            </Link>
-          </div>
+          <nav className="flex flex-wrap justify-center gap-2 p-1 bg-white/5 backdrop-blur-lg rounded-lg" aria-label="Tabs">
+            {eventTypes.map((type) => (
+              <button
+                key={type}
+                onClick={() => setActiveTab(type)}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 ${
+                  activeTab === type
+                    ? isLight
+                      ? 'bg-violet-100 text-violet-800 shadow-lg'
+                      : 'bg-white/10 text-white shadow-lg'
+                    : isLight
+                      ? 'text-gray-600 hover:text-violet-800 hover:bg-violet-50'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </nav>
         </motion.div>
 
-        {/* Events Content */}
-        <div className="mt-16">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-          ) : events.length === 0 ? (
-            <motion.div 
-              variants={itemVariants}
-              className="text-center py-12"
-            >
-              <p className="text-gray-400">No events found for this category.</p>
-            </motion.div>
-          ) : (
-            <AnimatePresence>
-              <motion.div 
-                variants={containerVariants}
-                className="space-y-16"
-              >
-                {/* Upcoming Events */}
-                {events.some(event => isUpcoming(event.date)) && (
-                  <motion.div variants={itemVariants}>
-                    <h2 className="text-2xl font-bold text-white mb-8 pl-4 border-l-4 border-blue-500">
-                      Upcoming Events
-                    </h2>
-                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                      {events
-                        .filter(event => isUpcoming(event.date))
-                        .map((event) => (
-                          <motion.div
-                            key={event.id}
-                            variants={itemVariants}
-                            whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                            className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300"
-                          >
-                            {event.imageBase64 ? (
-                              <div className="h-48 overflow-hidden">
-                                <img
-                                  src={event.imageBase64}
-                                  alt={event.title}
-                                  className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-500"
-                                />
-                              </div>
-                            ) : (
-                              <div className="h-48 bg-gray-700/50 flex items-center justify-center">
-                                <svg
-                                  className="h-12 w-12 text-gray-500"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                  />
-                                </svg>
-                              </div>
-                            )}
-                            <div className="p-6">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h3 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors duration-300">
-                                    {event.title}
-                                  </h3>
-                                  <p className="mt-1 text-sm text-gray-400">{event.venue}</p>
-                                </div>
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/50">
-                                  {event.eventType}
-                                </span>
-                              </div>
-                              {event.date && (
-                                <p className="mt-4 text-sm text-gray-400">
-                                  <span className="font-medium text-gray-300">Date:</span>{' '}
-                                  {formatDate(event.date)}
-                                </p>
-                              )}
-                              {event.description && (
-                                <p className="mt-4 text-sm text-gray-400 line-clamp-3">
-                                  {event.description}
-                                </p>
-                              )}
-                              {event.registrationLink && (
-                                <a
-                                  href={event.registrationLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="mt-6 inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-blue-500/20 text-blue-400 border border-blue-500/50 hover:bg-blue-500/30 transition-all duration-300"
-                                >
-                                  Register Now
-                                  <svg
-                                    className="ml-2 h-4 w-4"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M14 5l7 7m0 0l-7 7m7-7H3"
-                                    />
-                                  </svg>
-                                </a>
-                              )}
-                            </div>
-                          </motion.div>
-                        ))}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Past Events */}
-                {events.some(event => !isUpcoming(event.date)) && (
-                  <motion.div variants={itemVariants}>
-                    <h2 className="text-2xl font-bold text-white mb-8 pl-4 border-l-4 border-gray-500">
-                      Past Events
-                    </h2>
-                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                      {events
-                        .filter(event => !isUpcoming(event.date))
-                        .map((event) => (
-                          <motion.div
-                            key={event.id}
-                            variants={itemVariants}
-                            whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                            className="bg-gray-800/30 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-gray-700/30 hover:border-gray-600/30 transition-all duration-300"
-                          >
-                            {event.imageBase64 ? (
-                              <div className="h-48 overflow-hidden grayscale">
-                                <img
-                                  src={event.imageBase64}
-                                  alt={event.title}
-                                  className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-500"
-                                />
-                              </div>
-                            ) : (
-                              <div className="h-48 bg-gray-700/30 flex items-center justify-center">
-                                <svg
-                                  className="h-12 w-12 text-gray-600"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                  />
-                                </svg>
-                              </div>
-                            )}
-                            <div className="p-6">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h3 className="text-lg font-semibold text-gray-300 group-hover:text-gray-200 transition-colors duration-300">
-                                    {event.title}
-                                  </h3>
-                                  <p className="mt-1 text-sm text-gray-500">{event.venue}</p>
-                                </div>
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-700/50 text-gray-400 border border-gray-600/50">
-                                  {event.eventType}
-                                </span>
-                              </div>
-                              {event.date && (
-                                <p className="mt-4 text-sm text-gray-500">
-                                  <span className="font-medium text-gray-400">Date:</span>{' '}
-                                  {formatDate(event.date)}
-                                </p>
-                              )}
-                              {event.description && (
-                                <p className="mt-4 text-sm text-gray-500 line-clamp-3">
-                                  {event.description}
-                                </p>
-                              )}
-                            </div>
-                          </motion.div>
-                        ))}
-                    </div>
-                  </motion.div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          )}
-        </div>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className={`animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 ${
+              isLight ? 'border-violet-600' : 'border-violet-400'
+            }`}></div>
+          </div>
+        ) : filteredEvents.length === 0 ? (
+          <div className="text-center py-12">
+            <p className={isLight ? 'text-gray-500' : 'text-gray-400'}>
+              No events found for {activeTab === 'ALL' ? 'any category' : activeTab}.
+            </p>
+          </div>
+        ) : (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+            }}
+            className="grid gap-8 md:grid-cols-3"
+          >
+            {filteredEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </motion.div>
+        )}
       </div>
-    </motion.div>
+
+      {/* Modal */}
+      <DetailModal />
+
+      {/* Add styles for animations */}
+      <style jsx>{`
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+      `}</style>
+    </div>
   );
 };
 

@@ -1,74 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { motion, AnimatePresence } from 'framer-motion';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/client';
-import { useParams } from 'react-router-dom';
-import PDFViewer from '../../components/ui/PDFViewer';
-import { motion } from 'framer-motion';
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: [0.22, 1, 0.36, 1]
-    }
-  }
-};
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Research = () => {
-  const { type } = useParams();
-  const [researchPapers, setResearchPapers] = useState([]);
+  const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPaper, setSelectedPaper] = useState(null);
-  const [activeTab, setActiveTab] = useState(type?.toUpperCase() || 'ALL');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   useEffect(() => {
-    fetchResearchPapers();
-  }, [activeTab]);
+    fetchPapers();
+  }, []);
 
-  useEffect(() => {
-    if (type) {
-      setActiveTab(type.toUpperCase());
-    }
-  }, [type]);
-
-  const fetchResearchPapers = async () => {
-    setLoading(true);
+  const fetchPapers = async () => {
     try {
-      let researchQuery;
-      
-      if (activeTab === 'ALL') {
-        researchQuery = collection(db, 'research');
-      } else {
-        researchQuery = query(
-          collection(db, 'research'),
-          where('authorType', '==', activeTab)
-        );
-      }
-      
-      const researchSnapshot = await getDocs(researchQuery);
-      const researchData = researchSnapshot.docs.map(doc => ({
+      const papersCollection = collection(db, 'research_papers');
+      const papersSnapshot = await getDocs(papersCollection);
+      const papersData = papersSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-      
-      researchData.sort((a, b) => {
-        return new Date(b.publicationDate || b.timestamp) - new Date(a.publicationDate || a.timestamp);
-      });
-      
-      setResearchPapers(researchData);
+      papersData.sort((a, b) => new Date(b.publicationDate) - new Date(a.publicationDate));
+      setPapers(papersData);
     } catch (error) {
       console.error('Error fetching research papers:', error);
     } finally {
@@ -76,188 +33,311 @@ const Research = () => {
     }
   };
 
-  const tabs = [
-    { id: 'ALL', label: 'All' },
-    { id: 'STUDENTS', label: 'Students' },
-    { id: 'FACULTY', label: 'Faculty' },
-  ];
+  // Modal animation variants
+  const modalVariants = {
+    hidden: {
+      opacity: 0,
+      scale: 0.8,
+      y: 50
+    },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30
+      }
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.8,
+      y: 50,
+      transition: {
+        duration: 0.2
+      }
+    }
+  };
+
+  // Card component for research papers
+  const PaperCard = ({ paper }) => {
+    return (
+      <motion.div
+        onClick={() => {
+          setSelectedPaper(paper);
+          setIsModalOpen(true);
+        }}
+        className="relative group cursor-pointer rounded-2xl overflow-hidden aspect-[4/3]"
+        whileHover={{ scale: 1.02 }}
+        transition={{ duration: 0.2 }}
+      >
+        {/* Card Background */}
+        <div className="absolute inset-0">
+          {paper.imageBase64 ? (
+            <img
+              src={paper.imageBase64}
+              alt={paper.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-violet-500/20 to-cyan-500/20" />
+          )}
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
+        </div>
+
+        {/* Content */}
+        <div className="relative h-full p-6 flex flex-col justify-end text-white">
+          <div className="space-y-3 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+            <div className="flex justify-between items-center">
+              <span className="px-3 py-1 rounded-full text-sm bg-white/20 backdrop-blur-sm">
+                {paper.journal}
+              </span>
+              {paper.publicationDate && (
+                <span className="text-sm text-white/80">
+                  {new Date(paper.publicationDate).toLocaleDateString()}
+                </span>
+              )}
+            </div>
+            
+            <h3 className="text-xl font-bold leading-tight">
+              {paper.title}
+            </h3>
+            
+            <p className="text-sm text-white/80 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              {paper.abstract}
+            </p>
+
+            <div className="flex items-center mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <span className="text-sm font-medium">
+                    {(paper.author || "").split(" ").map(n => n[0]).join("")}
+                  </span>
+                </div>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium">
+                  {paper.author}
+                </p>
+                <p className="text-xs text-white/60">
+                  {paper.department || "Computer Science & Design"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  // Modal Component
+  const DetailModal = () => {
+    if (!selectedPaper) return null;
+
+    return (
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-2xl"
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/20 text-white hover:bg-black/30 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              {/* Image */}
+              <div className="relative h-64 sm:h-80">
+                {selectedPaper.imageBase64 ? (
+                  <img
+                    src={selectedPaper.imageBase64}
+                    alt={selectedPaper.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-violet-500/20 to-cyan-500/20 flex items-center justify-center">
+                    <span className="text-4xl font-bold text-white/20">
+                      Research Paper
+                    </span>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              </div>
+
+              {/* Content */}
+              <div className="relative p-6 sm:p-8">
+                <div className="flex justify-between items-start mb-4">
+                  <span className={`px-3 py-1 rounded-full text-sm ${
+                    isLight
+                      ? 'bg-violet-100 text-violet-800'
+                      : 'bg-violet-500/20 text-violet-400'
+                  }`}>
+                    {selectedPaper.journal}
+                  </span>
+                  {selectedPaper.publicationDate && (
+                    <span className={isLight ? 'text-gray-500' : 'text-gray-400'}>
+                      {new Date(selectedPaper.publicationDate).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+
+                <h3 className={`text-2xl font-bold mb-4 ${
+                  isLight ? 'text-gray-900' : 'text-white'
+                }`}>
+                  {selectedPaper.title}
+                </h3>
+
+                <p className={`mb-6 ${
+                  isLight ? 'text-gray-600' : 'text-gray-400'
+                }`}>
+                  {selectedPaper.abstract}
+                </p>
+
+                <div className="flex items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex-shrink-0">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                      isLight
+                        ? 'bg-violet-100'
+                        : 'bg-gradient-to-br from-violet-500/20 to-cyan-500/20'
+                    }`}>
+                      <span className={`text-lg font-medium ${
+                        isLight ? 'text-violet-800' : 'text-white'
+                      }`}>
+                        {(selectedPaper.author || "").split(" ").map(n => n[0]).join("")}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <p className={`font-medium ${
+                      isLight ? 'text-gray-900' : 'text-white'
+                    }`}>
+                      {selectedPaper.author}
+                    </p>
+                    <p className={`text-sm ${
+                      isLight ? 'text-gray-500' : 'text-gray-400'
+                    }`}>
+                      {selectedPaper.department || "Computer Science & Design"}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedPaper.doi && (
+                  <div className="mt-6">
+                    <a
+                      href={`https://doi.org/${selectedPaper.doi}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`inline-flex items-center gap-2 ${
+                        isLight
+                          ? 'text-violet-600 hover:text-violet-700'
+                          : 'text-violet-400 hover:text-violet-300'
+                      } font-medium transition-colors`}
+                    >
+                      View Paper
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </a>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-black text-white py-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className={`min-h-screen ${isLight 
+      ? 'bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100' 
+      : 'bg-[#030014] bg-grid-pattern'}`}>
+      
+      {/* Background Elements */}
+      <div className="absolute inset-0 w-full h-full">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob"></div>
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000"></div>
+      </div>
+
+      <div className="container mx-auto px-4 py-20 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center"
+          className="text-center mb-16"
         >
-          <h1 className="text-5xl font-bold mb-6">Research Papers</h1>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Explore the research contributions from our department.
+          <h1 className={`text-4xl md:text-5xl font-bold mb-6 ${
+            isLight 
+              ? 'bg-gradient-to-r from-violet-600 to-cyan-500 text-transparent bg-clip-text' 
+              : 'bg-gradient-to-r from-violet-400 to-cyan-400 text-transparent bg-clip-text'
+          }`}>
+            Research Papers
+          </h1>
+          <p className={`text-xl ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>
+            Explore the latest research contributions from our department
           </p>
         </motion.div>
 
-        <div className="mt-16">
-          {/* Tabs */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="flex justify-center mb-12"
-          >
-            <nav className="flex space-x-2 p-1 bg-white/5 backdrop-blur-lg rounded-lg" aria-label="Tabs">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    px-6 py-2.5 text-sm font-medium rounded-md transition-all duration-300
-                    ${activeTab === tab.id
-                      ? 'bg-white/10 text-white shadow-lg'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'}
-                  `}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-          </motion.div>
-
-          {/* Content */}
-          <div className="mt-12">
-            {loading ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
-              </div>
-            ) : researchPapers.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="text-center py-12"
-              >
-                <p className="text-gray-400">No research papers found for this category.</p>
-              </motion.div>
-            ) : (
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="grid gap-8 md:grid-cols-2"
-              >
-                {researchPapers.map((paper) => (
-                  <motion.div
-                    key={paper.id}
-                    variants={itemVariants}
-                    className="group bg-white/5 backdrop-blur-lg rounded-xl p-6 hover:bg-white/10 transition-all duration-300"
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        paper.authorType === 'FACULTY' 
-                          ? 'bg-purple-500/20 text-purple-300' 
-                          : 'bg-blue-500/20 text-blue-300'
-                      }`}>
-                        {paper.authorType}
-                      </span>
-                      {paper.publicationDate && (
-                        <span className="text-xs text-gray-500">
-                          {new Date(paper.publicationDate).toLocaleDateString()}
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="text-xl font-bold text-white mb-3">{paper.title}</h3>
-                    
-                    <div className="flex items-center mt-4 mb-6">
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                          <span className="text-white font-medium">
-                            {paper.authors ? paper.authors.split(',')[0].charAt(0).toUpperCase() : 'R'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm font-medium text-white">{paper.authors}</p>
-                        {paper.journal && (
-                          <p className="text-xs text-gray-500">{paper.journal}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {paper.abstract && (
-                      <div className="mb-6">
-                        <p className="text-sm text-gray-400 line-clamp-3">{paper.abstract}</p>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between">
-                      {paper.pdfLink && (
-                        <button
-                          onClick={() => setSelectedPaper(paper)}
-                          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 flex items-center gap-2"
-                        >
-                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 6v6m0 0v6m0-6h6m-6 0H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                          </svg>
-                          View Paper
-                        </button>
-                      )}
-                      
-                      {paper.doi && (
-                        <a
-                          href={`https://doi.org/${paper.doi}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-                        >
-                          DOI: {paper.doi}
-                        </a>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className={`animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 ${
+              isLight ? 'border-violet-600' : 'border-violet-400'
+            }`}></div>
           </div>
-        </div>
+        ) : papers.length === 0 ? (
+          <div className="text-center py-12">
+            <p className={isLight ? 'text-gray-500' : 'text-gray-400'}>No research papers found.</p>
+          </div>
+        ) : (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+            }}
+            className="grid gap-8 md:grid-cols-3"
+          >
+            {papers.map((paper) => (
+              <PaperCard key={paper.id} paper={paper} />
+            ))}
+          </motion.div>
+        )}
       </div>
 
-      {/* PDF Viewer Modal */}
-      {selectedPaper && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-black opacity-75"></div>
-            </div>
+      {/* Modal */}
+      <DetailModal />
 
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-            <div className="inline-block align-bottom bg-black rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full border border-white/10">
-              <div className="bg-black px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                    <h3 className="text-2xl font-bold text-white mb-4">
-                      {selectedPaper.title}
-                    </h3>
-                    <div className="mt-4 h-[600px] bg-white/5 rounded-lg">
-                      <PDFViewer driveLink={selectedPaper.pdfLink} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white/5 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
-                  className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-white/10 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300"
-                  onClick={() => setSelectedPaper(null)}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Add styles for animations */}
+      <style jsx>{`
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+      `}</style>
     </div>
   );
 };

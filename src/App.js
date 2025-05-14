@@ -13,6 +13,7 @@ import { db } from './firebase/client';
 
 // Lazy loaded components
 const AdminHome = React.lazy(() => import('./pages/admin/AdminHome'));
+const AdminNotifications = React.lazy(() => import('./pages/admin/AdminNotifications'));
 const AdminCertifications = React.lazy(() => import('./pages/admin/AdminCertifications'));
 const AdminAchievements = React.lazy(() => import('./pages/admin/AdminAchievements'));
 const AdminResearch = React.lazy(() => import('./pages/admin/AdminResearch'));
@@ -204,6 +205,15 @@ function App() {
             </AdminDashboard>
           </AdminProtectedRoute>
         } />
+        <Route path="/admin/notifications" element={
+          <AdminProtectedRoute>
+            <AdminDashboard>
+              <React.Suspense fallback={<div>Loading...</div>}>
+                <AdminNotifications />
+              </React.Suspense>
+            </AdminDashboard>
+          </AdminProtectedRoute>
+        } />
         <Route path="/admin/certifications" element={
           <AdminProtectedRoute>
             <AdminDashboard>
@@ -267,6 +277,7 @@ function App() {
             </AdminDashboard>
           </AdminProtectedRoute>
         } />
+        
         
         {/* Catch-all route */}
         <Route path="*" element={<Navigate to="/" replace />} />

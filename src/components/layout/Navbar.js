@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, createContext, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HoveredLink } from '../ui/navbar-menu';
@@ -8,6 +8,13 @@ import { HomeIcon, UserGroupIcon, AcademicCapIcon, CalendarIcon, UserIcon, Phone
 import { RiMenu3Fill, RiCloseFill } from 'react-icons/ri';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 
+// Create a context to manage dropdown state
+const DropdownContext = createContext({
+  activeDropdown: null,
+  setActiveDropdown: () => {},
+  isClosing: false
+});
+
 const Navbar = () => {
   const [active, setActive] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -16,15 +23,43 @@ const Navbar = () => {
   const [activeSubmenu, setActiveSubmenu] = useState(null);
   const { theme } = useTheme();
   const isLight = theme === 'light';
-
+  const timeoutRef = useRef(null);
+  const dropdownRef = useRef({});
+  
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, []);
+
+  // Handle dropdown open/close with a single parent container
+  const handleDropdownToggle = (name, isOpen) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    if (isOpen) {
+      setActive(name);
+    } else {
+      timeoutRef.current = setTimeout(() => {
+        setActive(null);
+      }, 100);
+    }
+  };
+
+  // Context value
+  const dropdownContextValue = {
+    activeDropdown: active,
+    setActiveDropdown: handleDropdownToggle,
+    handleDropdownClose: () => handleDropdownToggle(null, false),
+    isClosing: false
+  };
 
   const navLinks = [
     { name: 'Home', icon: HomeIcon, path: '/' },
@@ -35,9 +70,12 @@ const Navbar = () => {
       path: '/academics', 
       hasSubmenu: true,
       submenu: [
-        { name: 'Undergraduate', path: '/academics/undergraduate' },
-        { name: 'Postgraduate', path: '/academics/postgraduate' },
-        { name: 'Research', path: '/academics/research' },
+                      { name: 'Research Papers', path: '/academics/research' },
+                      { name: 'Achievements', path: '/academics/achievements' },
+                      { name: 'Placements', path: '/academics/placements' },
+                       { name: 'NPTEL', path: '/academics/certifications/nptel' },
+                      { name: 'UDEMY', path: '/academics/certifications/udemy' },
+                      { name: 'SPRINGBOOT', path: '/academics/certifications/springboot' }
       ]
     },
     { 
@@ -56,9 +94,9 @@ const Navbar = () => {
   ];
 
   return (
-    <>
+    <DropdownContext.Provider value={dropdownContextValue}>
       <header className={`${isScrolled 
-        ? isLight ? 'bg-gray-50/95 backdrop-blur-md border-b border-neutral-200' : 'bg-black/95 backdrop-blur-md border-b border-white/10'
+        ? isLight ? 'bg-gray-50/95 backdrop-blur-md' : 'bg-black/95 backdrop-blur-md'
         : isLight ? 'bg-gray-50 relative overflow-hidden before:absolute before:w-12 before:h-12 before:content-[\'\'] before:right-0 before:top-0 before:bg-violet-500 before:rounded-full before:blur-lg before:opacity-70 before:[box-shadow:-30px_10px_10px_5px_#F9B0B9]' : 'bg-black'} 
         w-full z-[90] transition-all duration-300`}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-3 relative z-10 rounded-full">
@@ -89,49 +127,21 @@ const Navbar = () => {
                     <li key={link.name} className="relative">
                       {link.hasSubmenu ? (
                         <div 
-                          className={`group relative overflow-hidden rounded-full px-4 py-1.5 ${isLight 
-                            ? 'text-pink-400 hover:text-violet-600 before:absolute before:w-12 before:h-12 before:content-[\'\'] before:right-0 before:bg-violet-500 before:rounded-full before:blur-lg before:opacity-0 hover:before:opacity-70 before:[box-shadow:-30px_10px_10px_5px_#F9B0B9]' 
-                            : 'text-white/80 hover:text-white'} font-medium text-sm tracking-wide cursor-pointer transition-all duration-300 flex items-center`}
-                          onMouseEnter={() => setActive(link.name.toLowerCase())}
-                          onMouseLeave={() => setActive(null)}
+                          ref={el => dropdownRef.current[link.name.toLowerCase()] = el}
+                          className="dropdown-container"
+                          onMouseEnter={() => handleDropdownToggle(link.name.toLowerCase(), true)}
+                          onMouseLeave={() => handleDropdownToggle(link.name.toLowerCase(), false)}
                         >
-                          <span className="relative z-10">{link.name}</span>
-                          <svg className="ml-1.5 w-4 h-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                          </svg>
-
-                          {/* Dropdown Menu */}
-                          <AnimatePresence>
-                            {active === link.name.toLowerCase() && (
-                              <motion.div
-                                initial={{ opacity: 0, y: -20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.2 }}
-                                className={`absolute top-full left-0 w-48 ${isLight 
-                                  ? 'bg-white border border-pink-200' 
-                                  : 'bg-black/95 border border-white/20'} rounded-2xl shadow-lg backdrop-blur-xl mt-2 overflow-hidden z-50`}
-                                onMouseEnter={() => setActive(link.name.toLowerCase())}
-                                onMouseLeave={() => setActive(null)}
-                              >
-                                <div className="p-2">
-                                  <div className="grid gap-1">
-                                    {link.submenu.map((item) => (
-                                      <Link
-                                        key={item.name}
-                                        to={item.path}
-                                        className={`block px-4 py-2 rounded-xl ${isLight 
-                                          ? 'text-pink-400 hover:text-violet-600 hover:bg-violet-50/50' 
-                                          : 'text-white/80 hover:text-white hover:bg-white/10'} transition-all duration-300`}
-                                      >
-                                        {item.name}
-                                      </Link>
-                                    ))}
-                                  </div>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                          <div 
+                            className={`group relative overflow-visible rounded-full px-4 py-1.5 ${isLight 
+                              ? 'text-pink-400 hover:text-violet-600 before:absolute before:w-12 before:h-12 before:content-[\'\'] before:right-0 before:bg-violet-500 before:rounded-full before:blur-lg before:opacity-0 hover:before:opacity-70 before:[box-shadow:-30px_10px_10px_5px_#F9B0B9]' 
+                              : 'text-white/80 hover:text-white'} font-medium text-sm tracking-wide cursor-pointer transition-all duration-300 flex items-center`}
+                          >
+                            <span className="relative z-10">{link.name}</span>
+                            <svg className="ml-1.5 w-4 h-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
                         </div>
                       ) : (
                         <Link 
@@ -226,117 +236,136 @@ const Navbar = () => {
       {/* Mega menus */}
       <AnimatePresence>
         {active === 'academics' && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className={`w-full fixed top-[60px] left-0 ${isLight 
-              ? 'bg-white/95 border-y border-pink-200' 
-              : 'bg-black/95 border-y border-white/10'} backdrop-blur-md z-50`}
-            onMouseEnter={() => setActive('academics')}
-            onMouseLeave={() => setActive(null)}
+          <div 
+            className="mega-menu-container"
+            onMouseEnter={() => handleDropdownToggle('academics', true)}
+            onMouseLeave={() => handleDropdownToggle('academics', false)}
           >
-            <div className="container mx-auto py-6">
-              <div className="grid grid-cols-3 gap-6">
-                {[
-                  { title: 'Programs', items: [
-                    { name: 'Undergraduate', path: '/academics/undergraduate' },
-                    { name: 'Postgraduate', path: '/academics/postgraduate' },
-                    { name: 'PhD', path: '/academics/phd' }
-                  ]},
-                  { title: 'Resources', items: [
-                    { name: 'Research Papers', path: '/academics/research' },
-                    { name: 'Achievements', path: '/academics/achievements' },
-                    { name: 'Placements', path: '/academics/placements' }
-                  ]},
-                  { title: 'Certifications', items: [
-                    { name: 'NPTEL', path: '/academics/certifications/nptel' },
-                    { name: 'UDEMY', path: '/academics/certifications/udemy' },
-                    { name: 'SPRINGBOOT', path: '/academics/certifications/springboot' }
-                  ]}
-                ].map((section, idx) => (
-                  <div key={idx} className="px-4">
-                    <h4 className={`text-lg font-semibold mb-4 ${isLight ? 'text-pink-400' : 'text-white'}`}>
-                      {section.title}
-                    </h4>
-                    <ul className="space-y-2">
-                      {section.items.map((item) => (
-                        <li key={item.name}>
-                          <Link
-                            to={item.path}
-                            className={`block px-4 py-2 rounded-xl ${isLight 
-                              ? 'text-pink-400 hover:text-violet-600 hover:bg-violet-50/50' 
-                              : 'text-white/80 hover:text-white hover:bg-white/10'} transition-all duration-300`}
-                          >
-                            {item.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className={`w-full fixed top-[60px] left-0 ${isLight 
+                ? 'bg-white/95 border-y border-pink-200' 
+                : 'bg-black/95 border-y border-white/10'} backdrop-blur-md z-50`}
+            >
+              <div className="container mx-auto py-6">
+                <div className="grid grid-cols-3 gap-6">
+                  {[
+                   
+                    { title: 'Resources', items: [
+                      { name: 'Research Papers', path: '/academics/research' },
+                      { name: 'Achievements', path: '/academics/achievements' },
+                      { name: 'Placements', path: '/academics/placements' }
+                    ]},
+                    { title: 'Certifications', items: [
+                      { name: 'NPTEL', path: '/academics/certifications/nptel' },
+                      { name: 'UDEMY', path: '/academics/certifications/udemy' },
+                      { name: 'SPRINGBOOT', path: '/academics/certifications/springboot' }
+                    ]}
+                  ].map((section, idx) => (
+                    <div key={idx} className="px-4">
+                      <h4 className={`text-lg font-semibold mb-4 ${isLight ? 'text-pink-400' : 'text-white'}`}>
+                        {section.title}
+                      </h4>
+                      <ul className="space-y-2">
+                        {section.items.map((item) => (
+                          <li key={item.name}>
+                            <Link
+                              to={item.path}
+                              className={`block px-4 py-2 rounded-xl ${isLight 
+                                ? 'text-pink-400 hover:text-violet-600 hover:bg-violet-50/50' 
+                                : 'text-white/80 hover:text-white hover:bg-white/10'} transition-all duration-300`}
+                            >
+                              {item.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         )}
 
         {active === 'events' && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className={`w-full fixed top-[60px] left-0 ${isLight 
-              ? 'bg-white/95 border-y border-pink-200' 
-              : 'bg-black/95 border-y border-white/10'} backdrop-blur-md z-50`}
-            onMouseEnter={() => setActive('events')}
-            onMouseLeave={() => setActive(null)}
+          <div 
+            className="mega-menu-container"
+            onMouseEnter={() => handleDropdownToggle('events', true)}
+            onMouseLeave={() => handleDropdownToggle('events', false)}
           >
-            <div className="container mx-auto py-6">
-              <div className="grid grid-cols-3 gap-6">
-                {[
-                  { title: 'Technical Events', items: [
-                    { name: 'SDP / Technical Seminar', path: '/events/seminars' },
-                    { name: 'Hackathon', path: '/events/hackathon' },
-                    { name: 'Workshops', path: '/events/workshops' }
-                  ]},
-                  { title: 'Non-Technical Events', items: [
-                    { name: 'Cultural Events', path: '/events/cultural' },
-                    { name: 'Sports', path: '/events/sports' },
-                    { name: 'Club Activities', path: '/events/clubs' }
-                  ]},
-                  { title: 'Industry Connect', items: [
-                    { name: 'Industrial Visits', path: '/events/industrial' },
-                    { name: 'Guest Lectures', path: '/events/guest-lectures' },
-                    { name: 'Internship Drive', path: '/events/internships' }
-                  ]}
-                ].map((section, idx) => (
-                  <div key={idx} className="px-4">
-                    <h4 className={`text-lg font-semibold mb-4 ${isLight ? 'text-pink-400' : 'text-white'}`}>
-                      {section.title}
-                    </h4>
-                    <ul className="space-y-2">
-                      {section.items.map((item) => (
-                        <li key={item.name}>
-                          <Link
-                            to={item.path}
-                            className={`block px-4 py-2 rounded-xl ${isLight 
-                              ? 'text-pink-400 hover:text-violet-600 hover:bg-violet-50/50' 
-                              : 'text-white/80 hover:text-white hover:bg-white/10'} transition-all duration-300`}
-                          >
-                            {item.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className={`w-full fixed top-[60px] left-0 ${isLight 
+                ? 'bg-white/95 border-y border-pink-200' 
+                : 'bg-black/95 border-y border-white/10'} backdrop-blur-md z-50`}
+            >
+              <div className="container mx-auto py-6">
+                <div className="grid grid-cols-3 gap-6">
+                  {[
+                    { title: 'Technical Events', items: [
+                      { name: 'SDP / Technical Seminar', path: '/events/seminars' },
+                      { name: 'Hackathon', path: '/events/hackathon' },
+                      { name: 'Workshops', path: '/events/workshops' }
+                    ]},
+                    { title: 'Non-Technical Events', items: [
+                      { name: 'Cultural Events', path: '/events/cultural' },
+                      { name: 'Sports', path: '/events/sports' },
+                      { name: 'Club Activities', path: '/events/clubs' }
+                    ]},
+                    { title: 'Industry Connect', items: [
+                      { name: 'Industrial Visits', path: '/events/industrial' },
+                      { name: 'Guest Lectures', path: '/events/guest-lectures' },
+                      { name: 'Internship Drive', path: '/events/internships' }
+                    ]}
+                  ].map((section, idx) => (
+                    <div key={idx} className="px-4">
+                      <h4 className={`text-lg font-semibold mb-4 ${isLight ? 'text-pink-400' : 'text-white'}`}>
+                        {section.title}
+                      </h4>
+                      <ul className="space-y-2">
+                        {section.items.map((item) => (
+                          <li key={item.name}>
+                            <Link
+                              to={item.path}
+                              className={`block px-4 py-2 rounded-xl ${isLight 
+                                ? 'text-pink-400 hover:text-violet-600 hover:bg-violet-50/50' 
+                                : 'text-white/80 hover:text-white hover:bg-white/10'} transition-all duration-300`}
+                            >
+                              {item.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
+
+      {/* Add CSS for dropdown containers */}
+      <style jsx>{`
+        .dropdown-container {
+          position: relative;
+          display: inline-block;
+        }
+        .mega-menu-container {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          z-index: 50;
+        }
+      `}</style>
 
       {/* Scrolled Mobile Navigation */}
       <AnimatePresence>
@@ -460,30 +489,73 @@ const Navbar = () => {
           >
             <nav className="p-2">
               {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.path}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 mb-1 last:mb-0 ${isLight 
-                    ? 'bg-gray-50 text-pink-400 hover:text-violet-600 before:absolute before:w-12 before:h-12 before:content-[\'\'] before:right-0 before:bg-violet-500 before:rounded-full before:blur-lg before:opacity-0 hover:before:opacity-70 before:[box-shadow:-30px_10px_10px_5px_#F9B0B9]' 
-                    : 'text-white/80 hover:text-white hover:bg-white/10'} transition-all duration-300 relative overflow-hidden whitespace-nowrap`}
-                  onClick={() => link.hasSubmenu && setActive(link.name.toLowerCase())}
-                >
-                  <link.icon className="w-5 h-5 min-w-[20px]" />
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: isHovered ? 1 : 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="relative z-10"
+                <div key={link.name} className="relative">
+                  <Link
+                    to={link.path}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 mb-1 last:mb-0 ${isLight 
+                      ? 'bg-gray-50 text-pink-400 hover:text-violet-600 before:absolute before:w-12 before:h-12 before:content-[\'\'] before:right-0 before:bg-violet-500 before:rounded-full before:blur-lg before:opacity-0 hover:before:opacity-70 before:[box-shadow:-30px_10px_10px_5px_#F9B0B9]' 
+                      : 'text-white/80 hover:text-white hover:bg-white/10'} transition-all duration-300 relative overflow-hidden whitespace-nowrap`}
+                    onClick={(e) => {
+                      if (link.hasSubmenu) {
+                        e.preventDefault();
+                        setActiveSubmenu(activeSubmenu === link.name ? null : link.name);
+                      }
+                    }}
                   >
-                    {link.name}
-                  </motion.span>
-                </Link>
+                    <link.icon className="w-5 h-5 min-w-[20px]" />
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: isHovered ? 1 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="relative z-10 flex-1"
+                    >
+                      {link.name}
+                    </motion.span>
+                    {link.hasSubmenu && isHovered && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <MdKeyboardArrowDown 
+                          className={`w-5 h-5 transition-transform ${activeSubmenu === link.name ? 'rotate-180' : ''}`} 
+                        />
+                      </motion.div>
+                    )}
+                  </Link>
+                  
+                  {/* Sidebar Submenu */}
+                  <AnimatePresence>
+                    {link.hasSubmenu && activeSubmenu === link.name && isHovered && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="ml-3 mt-1 mb-2 overflow-hidden"
+                      >
+                        <div className="space-y-1">
+                          {link.submenu.map((item) => (
+                            <Link
+                              key={item.name}
+                              to={item.path}
+                              className={`block px-3 py-2 rounded-lg text-sm ${isLight 
+                                ? 'text-pink-400 hover:text-violet-600 hover:bg-violet-50/50' 
+                                : 'text-white/70 hover:text-white hover:bg-white/10'} transition-all duration-300`}
+                            >
+                              {item.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               ))}
             </nav>
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </DropdownContext.Provider>
   );
 };
 
