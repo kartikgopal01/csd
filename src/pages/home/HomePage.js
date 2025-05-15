@@ -6,6 +6,9 @@ import { Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import FacultySection from '../../components/sections/FacultySection';
 import { ContainerScroll } from '../../components/ui/container-scroll-animation';
+import { AnimatedTestimonials } from '../../components/ui/animated-testimonials';
+import { TextHoverEffect } from '../../components/ui/text-hover-effect';
+
 
 // Animation variants for text slide
 const textSlideVariants = {
@@ -34,11 +37,14 @@ const HomePage = () => {
   const videoRef = useRef(null);
   const { theme } = useTheme();
   const isLight = theme === 'light';
+  const [facultyData, setFacultyData] = useState([]);
+  const [facultyLoading, setFacultyLoading] = useState(true);
 
   useEffect(() => {
     fetchAchievements();
     fetchRecentEvents();
     fetchActiveNotifications();
+    fetchFacultyData();
   }, []);
 
   // Notification auto-rotation
@@ -187,23 +193,24 @@ const HomePage = () => {
   }, [notifications]);
 
   const getNotificationStyles = (type) => {
+    // Create a more consistent design language matching the site's aesthetic
     switch (type) {
       case 'success':
         return isLight
-          ? 'bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-500 text-green-800'
-          : 'bg-gradient-to-r from-green-500/10 to-green-500/20 border-l-4 border-green-500 text-green-400';
+          ? 'border-l-4 border-emerald-500 text-emerald-800 bg-gradient-to-r from-emerald-50/80 to-teal-50/90'
+          : 'border-l-4 border-emerald-500 text-emerald-300 bg-gradient-to-r from-gray-900/80 to-gray-800/90';
       case 'warning':
         return isLight
-          ? 'bg-gradient-to-r from-yellow-50 to-yellow-100 border-l-4 border-yellow-500 text-yellow-800'
-          : 'bg-gradient-to-r from-yellow-500/10 to-yellow-500/20 border-l-4 border-yellow-500 text-yellow-400';
+          ? 'border-l-4 border-amber-500 text-amber-800 bg-gradient-to-r from-amber-50/80 to-yellow-50/90'
+          : 'border-l-4 border-amber-500 text-amber-300 bg-gradient-to-r from-gray-900/80 to-gray-800/90';
       case 'error':
         return isLight
-          ? 'bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-500 text-red-800'
-          : 'bg-gradient-to-r from-red-500/10 to-red-500/20 border-l-4 border-red-500 text-red-400';
+          ? 'border-l-4 border-rose-500 text-rose-800 bg-gradient-to-r from-rose-50/80 to-red-50/90'
+          : 'border-l-4 border-rose-500 text-rose-300 bg-gradient-to-r from-gray-900/80 to-gray-800/90';
       default: // info
         return isLight
-          ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-500 text-blue-800'
-          : 'bg-gradient-to-r from-blue-500/10 to-blue-500/20 border-l-4 border-blue-500 text-blue-400';
+          ? 'border-l-4 border-violet-500 text-violet-800 bg-gradient-to-r from-violet-50/80 to-indigo-50/90'
+          : 'border-l-4 border-violet-500 text-violet-300 bg-gradient-to-r from-gray-900/80 to-gray-800/90';
     }
   };
 
@@ -421,6 +428,80 @@ const HomePage = () => {
     );
   };
 
+  // Fetch faculty data
+  const fetchFacultyData = async () => {
+    setFacultyLoading(true);
+    try {
+      const facultyCollection = collection(db, 'faculty');
+      const facultySnapshot = await getDocs(facultyCollection);
+      
+      if (facultySnapshot.empty) {
+        // Use fallback data if no records found
+        setFacultyData(getFallbackFacultyData());
+      } else {
+        const facultyList = facultySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || "Faculty Member",
+            designation: data.position || "Faculty", 
+            quote: data.quote || data.specialization || "Faculty member in the Department of Computer Science & Design",
+            src: data.imageBase64 || null
+          };
+        });
+        
+        setFacultyData(facultyList);
+      }
+    } catch (error) {
+      console.error('Error fetching faculty data:', error);
+      // Use fallback data in case of error
+      setFacultyData(getFallbackFacultyData());
+    } finally {
+      setFacultyLoading(false);
+    }
+  };
+
+  // Fallback faculty data if database fetch fails
+  const getFallbackFacultyData = () => {
+    return [
+      {
+        id: "1",
+        quote: "Dedicated to advancing computer science education and research, with a focus on artificial intelligence and machine learning.",
+        name: "Dr. Sarah Chen",
+        designation: "Associate Professor",
+        src: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=2376&auto=format&fit=crop"
+      },
+      {
+        id: "2",
+        quote: "Passionate about teaching programming fundamentals and developing the next generation of software engineers.",
+        name: "Michael Rodriguez",
+        designation: "Assistant Professor",
+        src: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=2574&auto=format&fit=crop"
+      },
+      {
+        id: "3",
+        quote: "Research interests include human-computer interaction, UI/UX design, and accessibility in technology.",
+        name: "Dr. Emily Watson",
+        designation: "Professor",
+        src: "https://images.unsplash.com/photo-1573497019418-b400bb3ab074?q=80&w=2574&auto=format&fit=crop"
+      },
+      {
+        id: "4",
+        quote: "Specializing in cybersecurity and network systems with over 15 years of industry experience.",
+        name: "Dr. James Kim",
+        designation: "Professor",
+        src: "https://images.unsplash.com/photo-1577880216142-8549e9488dad?q=80&w=2670&auto=format&fit=crop"
+      },
+      {
+        id: "5",
+        quote: "Focused on data science and analytics, bringing real-world projects into the classroom.",
+        name: "Lisa Thompson",
+        designation: "Associate Professor",
+        src: "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=2522&auto=format&fit=crop"
+      }
+    ];
+  };
+
   return (
     <div className={`${isLight 
       ? 'bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100' 
@@ -430,11 +511,11 @@ const HomePage = () => {
       <AnimatePresence>
         {showNotification && notifications.length > 0 && (
           <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed bottom-0 left-0 right-0 z-50 flex justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed bottom-0 left-0 right-0 z-50 flex justify-center p-4 pointer-events-none"
           >
             {(() => {
               try {
@@ -442,92 +523,242 @@ const HomePage = () => {
                 console.log('Rendering notification:', currentNotification);
                 
                 return (
-                  <div className={`relative max-w-4xl w-full rounded-xl shadow-lg backdrop-blur-sm ${
-                    getNotificationStyles(currentNotification.type)
-                  }`}>
-                    {/* Progress bar */}
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-current opacity-10">
                       <motion.div
-                        className="h-full bg-current opacity-50"
+                    className="pointer-events-auto"
+                    initial={{ y: 100, scale: 0.8, opacity: 0 }}
+                    animate={{ 
+                      y: 0, 
+                      scale: 1, 
+                      opacity: 1,
+                      transition: {
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 24,
+                        mass: 0.9
+                      }
+                    }}
+                    exit={{ 
+                      y: 20, 
+                      scale: 0.9, 
+                      opacity: 0,
+                      transition: { duration: 0.3 }
+                    }}
+                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {/* 3D rotation wrapper */}
+                    <motion.div
+                      whileHover={{ 
+                        rotateX: 5, 
+                        rotateY: -5,
+                        transition: { duration: 0.3 }
+                      }}
+                      style={{ perspective: 800 }}
+                    >
+                      {/* Main notification container */}
+                      <div 
+                        className={`relative overflow-hidden max-w-md w-full rounded-3xl shadow-2xl ${
+                          isLight 
+                            ? 'bg-white/90 text-gray-800 backdrop-blur-lg'
+                            : 'bg-black/60 text-gray-100 backdrop-blur-lg'
+                        }`}
+                        style={{
+                          boxShadow: isLight 
+                            ? '0 10px 40px -10px rgba(124, 58, 237, 0.3), 0 0 80px -40px rgba(56, 189, 248, 0.4), 0 0 2px 1px rgba(124, 58, 237, 0.05)' 
+                            : '0 10px 40px -10px rgba(0, 0, 0, 0.5), 0 0 80px -40px rgba(124, 58, 237, 0.4), 0 0 2px 1px rgba(124, 58, 237, 0.1)'
+                        }}
+                      >
+                        {/* Decorative corner elements */}
+                        <div className="absolute top-0 left-0 w-32 h-32 -translate-x-16 -translate-y-16">
+                          <motion.div 
+                            className="absolute inset-0 bg-violet-500 rounded-full mix-blend-screen opacity-30 blur-xl"
+                            animate={{ 
+                              scale: [1, 1.2, 1],
+                              opacity: [0.3, 0.2, 0.3]
+                            }}
+                            transition={{
+                              duration: 4,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                          />
+                        </div>
+                        <div className="absolute bottom-0 right-0 w-32 h-32 translate-x-16 translate-y-16">
+                          <motion.div 
+                            className="absolute inset-0 bg-cyan-400 rounded-full mix-blend-screen opacity-30 blur-xl"
+                            animate={{ 
+                              scale: [1, 1.1, 1],
+                              opacity: [0.3, 0.1, 0.3]
+                            }}
+                            transition={{
+                              duration: 3,
+                              repeat: Infinity,
+                              ease: "easeInOut",
+                              delay: 0.5
+                            }}
+                          />
+                        </div>
+                        
+                        {/* Animated glow background */}
+                        <div className="absolute inset-0 overflow-hidden">
+                          <motion.div 
+                            className="absolute -inset-1 bg-gradient-to-r from-violet-600/20 via-fuchsia-500/10 to-cyan-600/20 opacity-40 blur-3xl"
+                            animate={{ 
+                              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                            }}
+                            transition={{ 
+                              duration: 8, 
+                              repeat: Infinity,
+                              repeatType: "reverse",
+                              ease: "easeInOut" 
+                            }}
+                            style={{ backgroundSize: '200% 200%' }}
+                          />
+                        </div>
+                        
+                        {/* Premium border */}
+                        <div 
+                          className="absolute inset-0 rounded-3xl pointer-events-none"
+                          style={{
+                            border: isLight 
+                              ? '1px solid rgba(255, 255, 255, 0.5)' 
+                              : '1px solid rgba(255, 255, 255, 0.05)',
+                            backgroundImage: isLight
+                              ? 'linear-gradient(to bottom right, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1))'
+                              : 'linear-gradient(to bottom right, rgba(255, 255, 255, 0.1), rgba(20, 20, 20, 0.7))'
+                          }}
+                        />
+                        
+                        {/* Content container with inner shadow */}
+                        <div 
+                          className="relative p-7"
+                          style={{
+                            boxShadow: isLight 
+                              ? 'inset 0 1px 1px rgba(255, 255, 255, 0.6)' 
+                              : 'inset 0 1px 1px rgba(255, 255, 255, 0.1)'
+                          }}
+                        >
+                          {/* Top line decoration */}
+                          <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
+                          
+                          {/* Header area */}
+                          <div className="flex items-center justify-between mb-5">
+                            <div className="flex space-x-1.5">
+                              {notifications.map((_, index) => (
+                                <motion.div 
+                                  key={index} 
+                                  className={`w-2 h-2 rounded-full ${
+                                    index === currentNotificationIndex 
+                                      ? 'bg-gradient-to-r from-violet-500 to-cyan-500' 
+                                      : isLight ? 'bg-gray-200' : 'bg-gray-700'
+                                  }`}
+                                  animate={index === currentNotificationIndex ? {
+                                    scale: [1, 1.4, 1],
+                                    boxShadow: [
+                                      '0 0 0 0 rgba(139, 92, 246, 0)',
+                                      '0 0 0 3px rgba(139, 92, 246, 0.3)',
+                                      '0 0 0 0 rgba(139, 92, 246, 0)'
+                                    ]
+                                  } : {}}
+                                  transition={{
+                                    duration: 1.5,
+                                    repeat: Infinity,
+                                    ease: "easeOut"
+                                  }}
+                                />
+                              ))}
+                            </div>
+                            
+                            {/* Elegant progress bar */}
+                            <div className="flex-1 mx-4 h-0.5 bg-gradient-to-r from-transparent via-gray-200 to-transparent dark:via-gray-700 rounded-full overflow-hidden">
+                              <motion.div 
+                                className="h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500"
                         initial={{ width: "0%" }}
                         animate={{ width: "100%" }}
                         transition={{ duration: 5, ease: "linear" }}
                         key={currentNotificationIndex}
+                                style={{
+                                  boxShadow: '0 0 8px rgba(139, 92, 246, 0.5)'
+                                }}
                       />
                     </div>
 
-                    <div className="p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        {/* Icon */}
-                        <div className="flex-shrink-0">
-                          {currentNotification.type === 'success' && (
-                            <div className={`rounded-full p-2 ${isLight ? 'bg-green-100' : 'bg-green-500/20'}`}>
-                              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            {/* Close Button with glow effect */}
+                            <motion.button
+                              onClick={() => setShowNotification(false)}
+                              className={`relative rounded-full p-1.5 flex items-center justify-center overflow-hidden ${
+                                isLight 
+                                  ? 'bg-gray-100/50 hover:bg-gray-100'
+                                  : 'bg-gray-800/50 hover:bg-gray-800'
+                              } backdrop-blur-sm transition-colors group`}
+                              whileHover={{ rotate: 90, scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                            >
+                              <motion.div 
+                                className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-violet-500/20 to-cyan-500/20"
+                                initial={{ rotate: 0 }}
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                              />
+                              <svg className="w-4 h-4 relative z-10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                               </svg>
-                            </div>
-                          )}
-                          {currentNotification.type === 'warning' && (
-                            <div className={`rounded-full p-2 ${isLight ? 'bg-yellow-100' : 'bg-yellow-500/20'}`}>
-                              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                              </svg>
-                            </div>
-                          )}
-                          {currentNotification.type === 'error' && (
-                            <div className={`rounded-full p-2 ${isLight ? 'bg-red-100' : 'bg-red-500/20'}`}>
-                              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            </div>
-                          )}
-                          {currentNotification.type === 'info' && (
-                            <div className={`rounded-full p-2 ${isLight ? 'bg-blue-100' : 'bg-blue-500/20'}`}>
-                              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            </div>
-                          )}
+                            </motion.button>
                         </div>
 
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold mb-1 text-lg">
+                          {/* Content with sequential animation and line decoration */}
+                          <motion.div
+                            initial="hidden"
+                            animate="visible"
+                            variants={{
+                              hidden: { opacity: 0 },
+                              visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
+                            }}
+                            className="relative"
+                          >
+                            {/* Left line decoration */}
+                            <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-violet-500/30 to-transparent" />
+                            
+                            <div className="pl-4">
+                              <motion.h3 
+                                className="text-xl font-medium mb-3"
+                                variants={{
+                                  hidden: { opacity: 0, x: -10 },
+                                  visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" } }
+                                }}
+                              >
                             {currentNotification.title}
-                          </h3>
-                          <p className="text-sm opacity-90">
+                              </motion.h3>
+                              
+                              <motion.p 
+                                className="text-sm opacity-85 leading-relaxed font-light"
+                                variants={{
+                                  hidden: { opacity: 0, x: -10 },
+                                  visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" } }
+                                }}
+                              >
                             {currentNotification.message}
-                          </p>
-                          
-                          {/* Priority Badge */}
-                          <div className="mt-2 flex items-center gap-2">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              currentNotification.priority === 'high'
-                                ? isLight ? 'bg-red-100 text-red-800' : 'bg-red-500/20 text-red-400'
-                                : currentNotification.priority === 'normal'
-                                ? isLight ? 'bg-yellow-100 text-yellow-800' : 'bg-yellow-500/20 text-yellow-400'
-                                : isLight ? 'bg-gray-100 text-gray-800' : 'bg-gray-500/20 text-gray-400'
-                            }`}>
-                              {currentNotification.priority.charAt(0).toUpperCase() + currentNotification.priority.slice(1)} Priority
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Close Button */}
-                        <button
-                          onClick={() => {
-                            console.log('Closing notification');
-                            setShowNotification(false);
-                          }}
-                          className="flex-shrink-0 rounded-full p-1.5 hover:bg-current hover:bg-opacity-10 transition-colors duration-200"
-                        >
-                          <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        </button>
+                              </motion.p>
+                              
+                              {/* Timeline indicator */}
+                              <motion.div 
+                                className="mt-4 flex items-center text-xs text-gray-500 dark:text-gray-400"
+                                variants={{
+                                  hidden: { opacity: 0, y: 10 },
+                                  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut", delay: 0.1 } }
+                                }}
+                              >
+                                <div className={`w-3 h-3 rounded-full ${isLight ? 'bg-violet-100' : 'bg-violet-900'} mr-2 flex items-center justify-center`}>
+                                  <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />
                       </div>
+                                <span>Just now</span>
+                              </motion.div>
                     </div>
+                          </motion.div>
                   </div>
+                      </div>
+                    </motion.div>
+                  </motion.div>
                 );
               } catch (error) {
                 console.error('Error rendering notification:', error);
@@ -547,8 +778,12 @@ const HomePage = () => {
           <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000"></div>
         </div>
 
-        <div className="container mx-auto px-4 py-20 relative z-10 w-full">
+        <div className="container mx-auto px-4 py-20 relative w-full">
           <div className="flex flex-col overflow-hidden">
+            <div className="mx-auto mb-[-60px]">
+              <TextHoverEffect text="PESITM" duration={0.3} />
+            </div>
+            
             <ContainerScroll
               titleComponent={
                 <div className="text-center">
@@ -614,9 +849,49 @@ const HomePage = () => {
           <div className="absolute top-20 left-60 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-3000"></div>
         </div>
         <div className="relative z-10 w-full">
-          <FacultySection />
+          <div className="container mx-auto px-4 py-20">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
+              <h2 className={`text-4xl md:text-5xl font-bold mb-6 ${
+                isLight 
+                  ? 'bg-gradient-to-r from-violet-600 to-cyan-500 text-transparent bg-clip-text' 
+                  : 'bg-gradient-to-r from-violet-400 to-cyan-400 text-transparent bg-clip-text'
+              }`}>
+                Our Faculty
+              </h2>
+              <p className={`text-xl ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>
+                Meet the brilliant minds shaping the future of computer science and design
+              </p>
+            </motion.div>
+            
+            {facultyLoading ? (
+              <div className="flex justify-center py-12">
+                <div className={`animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 ${
+                  isLight ? 'border-violet-600' : 'border-violet-400'
+                }`}></div>
+              </div>
+            ) : facultyData.length === 0 ? (
+              <div className="text-center py-12">
+                <p className={isLight ? 'text-gray-500' : 'text-gray-400'}>No faculty information available at the moment.</p>
+              </div>
+            ) : (
+              <>
+                <AnimatedTestimonials testimonials={facultyData} autoplay={true} />
+              </>
+            )}
+          </div>
         </div>
       </section>
+
+      {/* Gallery Section with 3D Marquee */}
+    
+
+       
 
       {/* Recent Events Section */}
       <section className={`relative overflow-hidden min-h-screen flex items-center ${isLight ? 'bg-transparent' : 'bg-[#030014]/50'}`}>
@@ -839,6 +1114,23 @@ const HomePage = () => {
         }
         .animation-delay-4000 {
           animation-delay: 4s;
+        }
+        .bg-size-200 {
+          background-size: 200% 100%;
+        }
+        .animate-gradient-x {
+          animation: gradient-x 3s linear infinite;
+        }
+        @keyframes gradient-x {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
         }
       `}</style>
     </div>
