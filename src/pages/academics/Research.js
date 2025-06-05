@@ -33,6 +33,28 @@ const Research = () => {
     }
   };
 
+  // Animation variants for staggered children
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5
+      }
+    }
+  };
+
   // Modal animation variants
   const modalVariants = {
     hidden: {
@@ -64,67 +86,68 @@ const Research = () => {
   const PaperCard = ({ paper }) => {
     return (
       <motion.div
+        variants={itemVariants}
         onClick={() => {
           setSelectedPaper(paper);
           setIsModalOpen(true);
         }}
-        className="relative group cursor-pointer rounded-2xl overflow-hidden aspect-[4/3]"
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.2 }}
+        className={`rounded-2xl p-6 transition-all duration-300 cursor-pointer ${
+          isLight 
+            ? 'bg-white/80 hover:bg-white shadow-lg hover:shadow-xl backdrop-blur-sm' 
+            : 'bg-white/5 hover:bg-white/10 backdrop-blur-lg'
+        }`}
       >
-        {/* Card Background */}
-        <div className="absolute inset-0">
-          {paper.imageBase64 ? (
-            <img
-              src={paper.imageBase64}
-              alt={paper.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-violet-500/20 to-cyan-500/20" />
-          )}
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
-        </div>
-
-        {/* Content */}
-        <div className="relative h-full p-6 flex flex-col justify-end text-white">
-          <div className="space-y-3 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-            <div className="flex justify-between items-center">
-              <span className="px-3 py-1 rounded-full text-sm bg-white/20 backdrop-blur-sm">
-                {paper.journal}
+        <div className="flex flex-col h-full">
+          <h3 className={`text-2xl font-bold mb-4 ${
+            isLight ? 'text-violet-800' : 'text-violet-300'
+          }`}>{paper.title}</h3>
+          
+          <div className="flex justify-between items-center mb-4">
+            <span className={`px-3 py-1 rounded-full text-sm ${
+              isLight
+                ? 'bg-violet-100 text-violet-800'
+                : 'bg-violet-900/30 text-violet-300'
+            }`}>
+              {paper.journal}
+            </span>
+            {paper.publicationDate && (
+              <span className={`text-sm ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
+                {new Date(paper.publicationDate).toLocaleDateString()}
               </span>
-              {paper.publicationDate && (
-                <span className="text-sm text-white/80">
-                  {new Date(paper.publicationDate).toLocaleDateString()}
-                </span>
-              )}
-            </div>
-            
-            <h3 className="text-xl font-bold leading-tight">
-              {paper.title}
-            </h3>
-            
-            <p className="text-sm text-white/80 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              {paper.abstract}
-            </p>
+            )}
+          </div>
+          
+          <p className={`mb-6 line-clamp-3 flex-grow ${
+            isLight ? 'text-gray-600' : 'text-gray-300'
+          }`}>
+            {paper.abstract}
+          </p>
 
-            <div className="flex items-center mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <span className="text-sm font-medium">
-                    {(paper.author || "").split(" ").map(n => n[0]).join("")}
-                  </span>
-                </div>
+          <div className="flex items-center mt-3">
+            <div className="flex-shrink-0">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                isLight 
+                  ? 'bg-violet-100' 
+                  : 'bg-gradient-to-br from-violet-500/20 to-cyan-500/20'
+              }`}>
+                <span className={`text-sm font-medium ${
+                  isLight ? 'text-violet-800' : 'text-white'
+                }`}>
+                  {(paper.author || "").split(" ").map(n => n[0]).join("")}
+                </span>
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium">
-                  {paper.author}
-                </p>
-                <p className="text-xs text-white/60">
-                  {paper.department || "Computer Science & Design"}
-                </p>
-              </div>
+            </div>
+            <div className="ml-3">
+              <p className={`text-sm font-medium ${
+                isLight ? 'text-gray-900' : 'text-white'
+              }`}>
+                {paper.author}
+              </p>
+              <p className={`text-xs ${
+                isLight ? 'text-gray-500' : 'text-gray-400'
+              }`}>
+                {paper.department || "Computer Science & Design"}
+              </p>
             </div>
           </div>
         </div>
@@ -141,7 +164,9 @@ const Research = () => {
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <motion.div
-              className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-2xl"
+              className={`relative w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl ${
+                isLight ? 'bg-white' : 'bg-gray-900'
+              }`}
               variants={modalVariants}
               initial="hidden"
               animate="visible"
@@ -260,62 +285,58 @@ const Research = () => {
   };
 
   return (
-    <div className={`min-h-screen ${isLight 
-      ? 'bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100' 
-      : 'bg-[#030014] bg-grid-pattern'}`}>
-      
-      {/* Background Elements */}
-      <div className="absolute inset-0 w-full h-full">
-        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob"></div>
-        <div className="absolute top-0 -right-4 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000"></div>
-      </div>
-
-      <div className="container mx-auto px-4 py-20 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-16"
-        >
-          <h1 className={`text-4xl md:text-5xl font-bold mb-6 ${
-            isLight 
-              ? 'bg-gradient-to-r from-violet-600 to-cyan-500 text-transparent bg-clip-text' 
-              : 'bg-gradient-to-r from-violet-400 to-cyan-400 text-transparent bg-clip-text'
-          }`}>
-            Research Papers
-          </h1>
-          <p className={`text-xl ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>
-            Explore the latest research contributions from our department
-          </p>
-        </motion.div>
-
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className={`animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 ${
-              isLight ? 'border-violet-600' : 'border-violet-400'
-            }`}></div>
-          </div>
-        ) : papers.length === 0 ? (
-          <div className="text-center py-12">
-            <p className={isLight ? 'text-gray-500' : 'text-gray-400'}>No research papers found.</p>
-          </div>
-        ) : (
+    <div className={`min-h-screen ${
+      isLight 
+        ? 'bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100' 
+        : 'bg-[#030014] bg-grid-pattern'
+    }`}>
+      {/* Research Papers Section */}
+      <section className={`relative overflow-hidden min-h-screen flex items-center ${isLight ? 'bg-transparent' : 'bg-[#030014]/50'}`}>
+        <div className="container mx-auto px-4 py-20 relative z-10">
           <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-            }}
-            className="grid gap-8 md:grid-cols-3"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
           >
-            {papers.map((paper) => (
-              <PaperCard key={paper.id} paper={paper} />
-            ))}
+            <h2 className={`text-4xl md:text-5xl font-bold mb-6 ${
+              isLight 
+                ? 'bg-gradient-to-r from-violet-600 to-cyan-500 text-transparent bg-clip-text' 
+                : 'bg-gradient-to-r from-violet-400 to-cyan-400 text-transparent bg-clip-text'
+            }`}>
+              Research Papers
+            </h2>
+            <p className={`text-xl ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>
+              Explore the latest research contributions from our department
+            </p>
           </motion.div>
-        )}
-      </div>
+
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className={`animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 ${
+                isLight ? 'border-violet-600' : 'border-violet-400'
+              }`}></div>
+            </div>
+          ) : papers.length === 0 ? (
+            <div className="text-center py-12">
+              <p className={isLight ? 'text-gray-500' : 'text-gray-400'}>No research papers found.</p>
+            </div>
+          ) : (
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
+            >
+              {papers.map((paper) => (
+                <PaperCard key={paper.id} paper={paper} />
+              ))}
+            </motion.div>
+          )}
+        </div>
+      </section>
 
       {/* Modal */}
       <DetailModal />

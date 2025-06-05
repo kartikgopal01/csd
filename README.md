@@ -1,64 +1,28 @@
-# Theatre Booking Application
+# Computer Science & Design (CSD) Department Website
 
-A React web application that allows users to book function theatres for events like birthdays, meetings, and photoshoots. The app supports multiple branches, each with its own features, location, and available time slots.
+A modern, responsive web application for the Computer Science & Design (CSD) department. The site showcases the department's academic programs, research, placements, achievements, certifications, faculty, and facilities, providing a comprehensive overview for students, faculty, and visitors.
 
 ## 🌟 Key Features
 
-### 🏢 Multi-Branch Selection
-- Display a list of available branches with:
-  - Name, address, features, and images
-  - "View on Map" button that redirects to Google Maps
-
-### 📅 Real-Time Slot Booking
-- Show date and time slot selection per branch
-- Disable time slots if already booked
-- Real-time availability using Firebase Firestore
-
-### ➕ Add-ons & Customization
-- Optional add-ons like:
-  - Decor
-  - Photography
-  - Catering
-  - Stage/Lighting
-- Dynamic price updates based on selected add-ons
-
-### 💳 Razorpay Payment Gateway
-- Use Razorpay Checkout for payment
-- Show booking summary before payment
-- On success:
-  - Store booking in Firebase
-  - Disable booked slot
-  - Send confirmation and receipt
-
-### 🔐 Firebase Authentication
-- Sign up / Login for users
-- Admin login to manage branches, slots, and view bookings
-
-### 📊 User & Admin Dashboards
-- User:
-  - View upcoming/past bookings
-  - Cancel (if within allowed time)
-- Admin:
-  - Manage branches and slots
-  - View payments and bookings
-  - Add or remove available time slots
-
-### 📱 Mobile-Responsive Design
-- Built using TailwindCSS
-- Smooth user experience on all devices
+- **About the Department**: Overview of the CSD program, vision, mission, faculty, and facilities.
+- **Academics**: Details about curriculum, certifications, and academic achievements.
+- **Research**: Explore research papers and contributions from faculty and students.
+- **Placements**: Placement statistics, top recruiters, and student placement records.
+- **Achievements**: Highlights of student and faculty achievements.
+- **Certifications**: Student certifications from NPTEL, Udemy, and more.
+- **Contact**: Department contact information and address.
+- **Mobile-Responsive Design**: Built with TailwindCSS for a seamless experience on all devices.
+- **Dark/Light Theme**: Switch between light and dark modes for comfortable viewing.
 
 ## 🛠 Tech Stack
-- Frontend: React.js, TailwindCSS
-- Database: Firebase Firestore
-- Auth: Firebase Authentication
-- Payment: Razorpay
-- Storage: Firebase Storage (for images)
+- **Frontend**: React.js, TailwindCSS, Framer Motion
+- **Database**: Firebase Firestore
+- **Auth & Storage**: Firebase Authentication & Storage
 
 ## 📋 Prerequisites
 - Node.js (v14.0.0 or higher)
 - npm (v6.0.0 or higher)
 - Firebase account
-- Razorpay account
 
 ## 🚀 Getting Started
 
@@ -66,8 +30,8 @@ A React web application that allows users to book function theatres for events l
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/theatre-booking.git
-cd theatre-booking
+git clone https://github.com/yourusername/csd-website.git
+cd csd-website
 ```
 
 2. Install dependencies:
@@ -75,7 +39,7 @@ cd theatre-booking
 npm install
 ```
 
-3. Create a `.env` file in the root directory with the following environment variables:
+3. Create a `.env` file in the root directory with your Firebase configuration:
 ```
 REACT_APP_FIREBASE_API_KEY=your_api_key
 REACT_APP_FIREBASE_AUTH_DOMAIN=your_auth_domain
@@ -83,7 +47,6 @@ REACT_APP_FIREBASE_PROJECT_ID=your_project_id
 REACT_APP_FIREBASE_STORAGE_BUCKET=your_storage_bucket
 REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 REACT_APP_FIREBASE_APP_ID=your_app_id
-REACT_APP_RAZORPAY_KEY_ID=your_razorpay_key_id
 ```
 
 ### Running the Application
@@ -91,7 +54,7 @@ REACT_APP_RAZORPAY_KEY_ID=your_razorpay_key_id
 npm start
 ```
 
-This will start the application in development mode. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Open [http://localhost:3000](http://localhost:3000) to view the website in your browser.
 
 ### Building for Production
 ```bash
@@ -100,139 +63,99 @@ npm run build
 
 This will create a production-ready build in the `build` folder.
 
+## 🗂 Main Sections & File Structure
+
+- `src/pages/about/AboutPage.js` — About the department, faculty, and facilities
+- `src/pages/academics/Research.js` — Research papers and contributions
+- `src/pages/academics/Placements.js` — Placement statistics and records
+- `src/pages/academics/Achievements.js` — Student and faculty achievements
+- `src/pages/academics/Certifications.js` — Student certifications
+- `src/components/` — Reusable UI components (navbar, footer, cards, etc.)
+- `src/contexts/ThemeContext.js` — Theme (light/dark) context
+- `src/firebase/` — Firebase configuration and utilities
+
+## 📁 File & Directory Overview
+
+### src/
+
+- **App.js** — Main application component, sets up routing and global structure.
+- **index.js** — Entry point for the React application.
+- **index.css** — Global CSS (mainly TailwindCSS imports and custom styles).
+- **App.css** — (Empty or legacy, can be used for app-wide styles.)
+- **logo.svg** — Department or site logo.
+- **reportWebVitals.js** — Performance measuring utility (optional for analytics).
+- **App.test.js** — Example test file for React testing setup.
+
+#### assets/
+- **css/styles.css** — Custom CSS styles for the website.
+
+#### components/
+- **layout/Navbar.js** — Responsive navigation bar, handles links and theme toggle.
+- **layout/Footer.js** — Footer with department/contact info and links.
+- **layout/Layout.js** — Page layout wrapper for consistent structure.
+- **ui/text-hover-effect.jsx** — Animated text hover effect for headings or links.
+- **ui/animated-testimonials.jsx** — Animated testimonials carousel.
+- **ui/draggable-card.jsx** — Draggable card UI component.
+- **ui/navbar-menu.js** — Mobile/desktop navbar menu logic.
+- **ui/container-scroll-animation.jsx** — Scroll-based animation container.
+- **ui/ThemeToggle.js** — Light/dark mode toggle button.
+- **ui/GradientSelect.js** — Gradient color selector UI.
+- **ui/ThemeDemo.js** — Demo for theme switching.
+- **ui/StudentCard.js** — Card for displaying student info.
+- **ui/PDFViewer.js** — Embedded PDF viewer for certificates.
+- **sections/FacultySection.js** — Section for displaying faculty members.
+- **admin/AdminDashboard.js** — Admin dashboard for managing site data.
+- **admin/CertificationForm.js** — Admin form for adding certifications.
+- **events/EventCard.jsx** — Card for displaying event info.
+- **events/DetailModal.jsx** — Modal for event details.
+
+#### contexts/
+- **ThemeContext.js** — Provides theme (light/dark) context to the app.
+- **AuthContext.js** — Provides authentication context and user state.
+
+#### firebase/
+- **client.js** — Firebase client configuration and initialization.
+- **admin.js** — Firebase admin SDK setup (for server/admin scripts).
+- **schema.js** — Firestore schema definitions and helpers.
+- **auth.js** — Authentication utility functions (login, signup, etc.).
+- **phoneauth.js** — Phone number authentication utilities.
+
+#### lib/
+- **utils.js** — General utility/helper functions used throughout the app.
+
+#### pages/
+- **about/AboutPage.js** — About the department, faculty, and facilities.
+- **academics/Research.js** — Research papers and contributions.
+- **academics/Placements.js** — Placement statistics and records.
+- **academics/Achievements.js** — Student and faculty achievements.
+- **academics/Certifications.js** — Student certifications (NPTEL, Udemy, etc.).
+- **admin/AdminHome.js** — Admin home dashboard.
+- **admin/AdminFaculty.js** — Admin management for faculty data.
+- **admin/AdminEvents.js** — Admin management for events.
+- **admin/AdminPlacements.js** — Admin management for placements.
+- **admin/AdminResearch.js** — Admin management for research papers.
+- **admin/AdminAchievements.js** — Admin management for achievements.
+- **admin/AdminStudents.js** — Admin management for student data.
+- **admin/AdminCertifications.js** — Admin management for certifications.
+- **admin/AdminNotifications.js** — Admin notifications and announcements.
+- **faculty/Faculty.js** — Faculty listing and profiles.
+- **faculty/FacultyDetail.js** — Detailed view for a faculty member.
+- **home/HomePage.js** — Main landing page with department highlights.
+- **events/Events.js** — List and details of department events.
+- **students/Students.js** — Student listing and profiles.
+- **students/StudentDetail.js** — Detailed view for a student.
+- **Login.js** — User login page.
+- **Signup.js** — User registration page.
+- **AdminSignup.js** — Admin registration page.
+
+## 👩‍💻 Contributing
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+
 ## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgements
 - [React](https://reactjs.org/)
 - [Firebase](https://firebase.google.com/)
 - [TailwindCSS](https://tailwindcss.com/)
-- [Razorpay](https://razorpay.com/)
-- [Date-fns](https://date-fns.org/)
-
-## Setup Instructions
-
-### 1. Install Dependencies
-
-```bash
-npm install
-```
-
-### 2. Initialize Database
-
-You have two options to initialize your Firebase database:
-
-#### Option 1: Run the setup script (Recommended for first-time setup)
-
-This script will create an admin user and initialize all necessary collections with sample data:
-
-```bash
-# Install ESM for module support
-npm install esm
-
-# Run the database setup script
-node -r esm src/firebase/setupDatabase.js
-```
-
-**Important**: The script creates an admin user with the following credentials:
-- Email: admin@theatre.com
-- Password: admin123
-
-Make sure to change these in the script before running it if you want different credentials.
-
-#### Option 2: Start the application
-
-The application automatically initializes all required collections on startup:
-
-```bash
-npm start
-```
-
-After starting the app, you'll need to:
-1. Sign up for a new account through the application interface
-2. Manually update that user to be an admin by using Option 1 or directly in Firebase Console
-
-### 3. Accessing the Admin Dashboard
-
-1. Log in with the admin credentials
-2. Click on the "Admin" link in the navigation bar
-
-### 4. Database Details
-
-The application uses the following Firestore collections:
-
-- `users` - User accounts and roles
-- `menuItems` - Food and beverage menu items
-- `menuCategories` - Categories for menu items
-- `addOns` - Additional services like decorations
-- `bookings` - Customer bookings
-- `branches` - Theatre locations
-- `galleryImages` - Gallery images
-
-## File Structure and Functions
-
-### Core Files
-- `src/App.js` - Main application component that sets up routing and application structure
-- `src/index.js` - Entry point for the React application
-- `src/mockData.js` - Contains mock data used for development and testing
-
-### Pages
-- `src/pages/Home.js` - Landing page with featured branches and promotional content
-- `src/pages/Branches.js` - Lists all available theatre branches with filtering options
-- `src/pages/BranchDetail.js` - Detailed view of a specific branch with booking functionality
-- `src/pages/Menu.js` - Displays food and beverage menu with categories and items
-- `src/pages/Gallery.js` - Photo gallery showcasing venues and past events
-- `src/pages/Events.js` - Information about special events and functions
-- `src/pages/BookingConfirmation.js` - Confirmation page after successful booking
-- `src/pages/Login.js` - User authentication page for login
-- `src/pages/Signup.js` - New user registration page
-- `src/pages/UserDashboard.js` - Dashboard for regular users to manage their bookings
-- `src/pages/AdminDashboard.js` - Comprehensive dashboard for administrators with multiple management tabs
-
-### Components
-- `src/components/Navbar.js` - Navigation bar with responsive design and user authentication state
-- `src/components/Footer.js` - Site footer with links and information
-- `src/components/BranchCard.js` - Card component for displaying branch information in listings
-- `src/components/TimeSlotSelector.js` - Interactive component for selecting available booking time slots
-- `src/components/AddOnsSelector.js` - Component for selecting and configuring booking add-ons
-- `src/components/BookingSummary.js` - Displays booking details and pricing before confirmation
-
-### Admin Components
-- `src/components/admin/AnalyticsDashboard.js` - Data visualization and booking statistics
-- `src/components/admin/BookingsManagement.js` - Manage, view, and update booking statuses
-- `src/components/admin/BranchManagement.js` - Add, edit, and manage theatre branches
-- `src/components/admin/MenuManagement.js` - Manage food and beverage menu items and categories
-- `src/components/admin/AddOnManagement.js` - Configure and price additional services
-- `src/components/admin/GalleryManagement.js` - Upload and manage gallery images
-
-### Context Providers
-- `src/contexts/AuthContext.js` - Authentication context for user management
-- `src/contexts/RazorpayContext.js` - Payment processing context for Razorpay integration
-
-### Firebase Integration
-- `src/firebase/client.js` - Firebase client configuration and initialization
-- `src/firebase/admin.js` - Firebase admin SDK setup
-- `src/firebase/auth.js` - Authentication utility functions
-- `src/firebase/phoneauth.js` - Phone number authentication utilities
-- `src/firebase/initCollections.js` - Database collection initialization with default data
-- `src/firebase/setupDatabase.js` - Script for setting up the Firebase database
-
-## Troubleshooting
-
-If you experience issues with admin access:
-
-1. Verify the user document in Firestore:
-   - Go to Firebase Console > Firestore Database > users collection
-   - Check that your user document has `role: "admin"`
-
-2. Clear browser cache and cookies, then log in again
-
-3. Run the setup script again to ensure proper initialization
-
-## Technologies Used
-
-- React
-- Firebase Authentication
-- Firestore Database
-- Firebase Storage
-- Tailwind CSS
+- [Framer Motion](https://www.framer.com/motion/)
